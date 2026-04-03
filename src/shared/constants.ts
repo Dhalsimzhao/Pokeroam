@@ -1,0 +1,10 @@
+export const IDLE_XP_PER_MINUTE = 2
+export const KEYBOARD_XP_PER_KEYSTROKE = 1
+export const KEYBOARD_XP_COOLDOWN_MS = 500
+export const FATIGUE_ACTIVE_MINUTES = 45
+export const FATIGUE_BREAK_MINUTES = 5
+export const DAILY_REWARD_HOUR = 8
+export const MAX_LEVEL = 100
+export const SAVE_DIR = '.pokeroam'
+export const SAVE_FILE = 'save.json'
+export const STARTER_SPECIES = [1, 4, 7] as const
