@@ -1,12 +1,9 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-
-function PanelWindow(): JSX.Element {
-  return <div>Panel Window</div>
-}
+import App from './App'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <PanelWindow />
+    <App />
   </React.StrictMode>
 )

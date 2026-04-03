@@ -1,8 +1,40 @@
 /// <reference types="vite/client" />
 
+interface ElectronAPI {
+  platform: string
+
+  // Pet window events (returns unsubscribe function)
+  onPetStateUpdate: (cb: (data: unknown) => void) => () => void
+  onDragChange: (cb: (data: unknown) => void) => () => void
+  onFatigueWarning: (cb: (data: unknown) => void) => () => void
+  onLevelUp: (cb: (data: unknown) => void) => () => void
+  onEvolve: (cb: (data: unknown) => void) => () => void
+
+  // Pet window commands
+  setClickThrough: (ignore: boolean) => void
+  dragMove: (dx: number, dy: number) => void
+  updateHitRegions: (
+    regions: Array<{ x: number; y: number; width: number; height: number }>
+  ) => void
+
+  // Panel window events
+  onSaveDataChanged: (cb: (data: unknown) => void) => () => void
+
+  // Panel window commands
+  getSaveData: () => Promise<unknown>
+  chooseStarter: (speciesId: number) => Promise<unknown>
+  releasePokemon: (pokemonId: string) => Promise<boolean>
+  recallPokemon: () => Promise<boolean>
+  equipItem: (pokemonId: string, itemId: string) => Promise<boolean>
+  unequipItem: (pokemonId: string) => Promise<boolean>
+  useItem: (itemId: string, pokemonId: string) => Promise<boolean>
+  claimDailyReward: () => Promise<unknown>
+  openPanel: () => void
+}
+
 declare global {
   interface Window {
-    api: Record<string, unknown>
+    api: ElectronAPI
   }
 }
 
