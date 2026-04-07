@@ -3,11 +3,11 @@ import { useEffect, useRef, type RefObject } from 'react'
 interface DragCallbacks {
   onDragStart: () => void
   onDragEnd: () => void
+  onDragMove: (dx: number, dy: number) => void
 }
 
 /**
  * Drag the pet window by mouse. Uses screenX/screenY to avoid jitter.
- * Calls onDragStart/onDragEnd so physics can switch anim states.
  */
 export function usePetDrag(
   containerRef: RefObject<HTMLElement | null>,
@@ -37,6 +37,7 @@ export function usePetDrag(
       if (dx === 0 && dy === 0) return
       lastPos.current = { x: e.screenX, y: e.screenY }
       window.api.dragMove(dx, dy)
+      cbRef.current.onDragMove(dx, dy)
     }
 
     const onMouseUp = (): void => {

@@ -39,12 +39,13 @@ export default function App(): JSX.Element {
   }, [])
 
   // Physics: walking, gravity, anim state
-  const { animState, facingLeft, startDrag, endDrag } = usePetPhysics()
+  const { animState, facingLeft, startDrag, endDrag, onDragMove } = usePetPhysics()
 
   // Drag & drop
   usePetDrag(containerRef, {
     onDragStart: startDrag,
-    onDragEnd: endDrag
+    onDragEnd: endDrag,
+    onDragMove
   })
 
   // Random idle events

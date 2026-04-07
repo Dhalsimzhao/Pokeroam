@@ -18,10 +18,9 @@ interface PhysicsState {
 interface PhysicsAPI {
   animState: PetAnimState
   facingLeft: boolean
-  /** Start dragging — physics pauses, position controlled externally */
   startDrag: () => void
-  /** End drag — pet enters falling state */
   endDrag: () => void
+  onDragMove: (dx: number, dy: number) => void
 }
 
 function randomBetween(min: number, max: number): number {
@@ -40,73 +39,60 @@ export function usePetPhysics(): PhysicsAPI {
     animState: 'idle',
     facingLeft: false
   })
-  const workAreaRef = useRef({ x: 0, y: 0, width: 1920, height: 1080 })
+  const workAreaRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null)
   const draggingRef = useRef(false)
-  const nextActionRef = useRef(0) // frame count until next behavior change
+  const nextActionRef = useRef(0)
 
   useEffect(() => {
     let rafId: number
     let frameCount = 0
 
-    // Fetch work area and set initial position
-    window.api.getWorkArea().then((wa) => {
-      workAreaRef.current = wa
-      const s = stateRef.current
-      s.x = wa.x + wa.width - WINDOW_SIZE - 20
-      s.y = wa.y + wa.height - WINDOW_SIZE
-      window.api.setPetPosition(s.x, s.y)
-    })
-
     const pickNextAction = (): void => {
       const s = stateRef.current
       if (Math.random() < 0.4) {
-        // Pause (idle)
         s.vx = 0
         s.animState = 'idle'
-        nextActionRef.current = frameCount + Math.round(randomBetween(120, 300)) // 2-5s
+        nextActionRef.current = frameCount + Math.round(randomBetween(120, 300))
       } else {
-        // Walk in random direction
         const goLeft = Math.random() < 0.5
         s.vx = goLeft ? -WALK_SPEED : WALK_SPEED
         s.facingLeft = goLeft
         s.animState = 'walk'
-        nextActionRef.current = frameCount + Math.round(randomBetween(180, 480)) // 3-8s
+        nextActionRef.current = frameCount + Math.round(randomBetween(180, 480))
       }
     }
 
-    pickNextAction()
+    const clampToBounds = (s: PhysicsState, wa: { x: number; y: number; width: number; height: number }): void => {
+      const minX = wa.x
+      const maxX = wa.x + wa.width - WINDOW_SIZE
+      if (s.x < minX) {
+        s.x = minX
+        s.vx = WALK_SPEED
+        s.facingLeft = false
+      } else if (s.x > maxX) {
+        s.x = maxX
+        s.vx = -WALK_SPEED
+        s.facingLeft = true
+      }
+    }
 
     const tick = (): void => {
-      if (draggingRef.current) {
+      const wa = workAreaRef.current
+      if (!wa || draggingRef.current) {
         rafId = requestAnimationFrame(tick)
         return
       }
 
       const s = stateRef.current
-      const wa = workAreaRef.current
       frameCount++
 
       if (s.grounded) {
-        // Time for next action?
         if (frameCount >= nextActionRef.current) {
           pickNextAction()
         }
 
-        // Move horizontally
         s.x += s.vx
-
-        // Clamp to screen bounds
-        const minX = wa.x
-        const maxX = wa.x + wa.width - WINDOW_SIZE
-        if (s.x <= minX) {
-          s.x = minX
-          s.vx = WALK_SPEED
-          s.facingLeft = false
-        } else if (s.x >= maxX) {
-          s.x = maxX
-          s.vx = -WALK_SPEED
-          s.facingLeft = true
-        }
+        clampToBounds(s, wa)
 
         // Y fixed at bottom
         s.y = wa.y + wa.height - WINDOW_SIZE
@@ -123,20 +109,28 @@ export function usePetPhysics(): PhysicsAPI {
           s.grounded = true
           s.animState = 'idle'
           s.vx = 0
-          nextActionRef.current = frameCount + Math.round(randomBetween(60, 120)) // brief pause
+          nextActionRef.current = frameCount + Math.round(randomBetween(60, 120))
         }
       }
 
       window.api.setPetPosition(s.x, s.y)
-
-      // Sync React state
       setAnimState(s.animState)
       setFacingLeft(s.facingLeft)
 
       rafId = requestAnimationFrame(tick)
     }
 
-    rafId = requestAnimationFrame(tick)
+    // Fetch work area FIRST, then set initial position and start physics
+    window.api.getWorkArea().then((wa) => {
+      workAreaRef.current = wa
+      const s = stateRef.current
+      s.x = wa.x + wa.width - WINDOW_SIZE - 20
+      s.y = wa.y + wa.height - WINDOW_SIZE
+      window.api.setPetPosition(s.x, s.y)
+      pickNextAction()
+      rafId = requestAnimationFrame(tick)
+    })
+
     return () => cancelAnimationFrame(rafId)
   }, [])
 
@@ -151,19 +145,40 @@ export function usePetPhysics(): PhysicsAPI {
   const endDrag = (): void => {
     draggingRef.current = false
     const s = stateRef.current
-    // Read current window position after drag
     const wa = workAreaRef.current
-    const groundY = wa.y + wa.height - WINDOW_SIZE
-    s.grounded = s.y >= groundY
-    if (!s.grounded) {
-      s.animState = 'falling'
-      s.vy = 0
-      setAnimState('falling')
-    } else {
-      s.animState = 'idle'
-      setAnimState('idle')
-    }
+    if (!wa) return
+
+    // Sync position from actual window position after drag
+    // The window was moved by drag-move IPC, but stateRef wasn't updated.
+    // We need to get the current window position.
+    window.api.getWorkArea().then((freshWa) => {
+      workAreaRef.current = freshWa
+      const groundY = freshWa.y + freshWa.height - WINDOW_SIZE
+
+      // Clamp x to screen bounds after drag
+      const minX = freshWa.x
+      const maxX = freshWa.x + freshWa.width - WINDOW_SIZE
+      if (s.x < minX) s.x = minX
+      if (s.x > maxX) s.x = maxX
+
+      s.grounded = s.y >= groundY
+      if (!s.grounded) {
+        s.animState = 'falling'
+        s.vy = 0
+        setAnimState('falling')
+      } else {
+        s.y = groundY
+        s.animState = 'idle'
+        setAnimState('idle')
+      }
+    })
   }
 
-  return { animState, facingLeft, startDrag, endDrag }
+  const onDragMove = (dx: number, dy: number): void => {
+    const s = stateRef.current
+    s.x += dx
+    s.y += dy
+  }
+
+  return { animState, facingLeft, startDrag, endDrag, onDragMove }
 }

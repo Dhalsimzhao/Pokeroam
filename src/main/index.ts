@@ -87,6 +87,7 @@ function sendPetState(): void {
   const pokemon = saveData.pokemon.find((p) => p.id === saveData!.activePokemonId)
   if (pokemon) {
     petWindow?.show()
+    petWindow?.setAlwaysOnTop(true, 'screen-saver')
     petWindow?.webContents.send('pet-state-update', {
       speciesId: pokemon.speciesId,
       level: pokemon.level,
