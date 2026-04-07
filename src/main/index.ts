@@ -4,6 +4,8 @@ import { createPetWindow } from './pet-window'
 import { createPanelWindow } from './panel-window'
 import { createTray } from './tray-manager'
 import { GrowthManager } from './growth-manager'
+import { KeyboardMonitor } from './keyboard-monitor'
+import { FatigueDetector } from './fatigue-detector'
 import type { SaveData } from '../shared/types'
 import { POKEMON, getSpeciesById, getExpForLevel } from '../shared/pokemon-data'
 import { MAX_LEVEL } from '../shared/constants'
@@ -13,6 +15,8 @@ let panelWindow: BrowserWindow | null = null
 let _tray: Tray | null = null
 let saveManager: SaveManager
 let growthManager: GrowthManager
+let keyboardMonitor: KeyboardMonitor
+let fatigueDetector: FatigueDetector
 let saveData: SaveData | null = null
 
 // Hit regions for Windows click-through polling
@@ -22,6 +26,8 @@ let cursorInside = false
 app.whenReady().then(() => {
   saveManager = new SaveManager()
   growthManager = new GrowthManager()
+  keyboardMonitor = new KeyboardMonitor()
+  fatigueDetector = new FatigueDetector()
   saveData = saveManager.load()
 
   petWindow = createPetWindow()
@@ -45,6 +51,7 @@ app.whenReady().then(() => {
   setupIpcHandlers()
   startClickThroughPolling()
   startIdleXpTick()
+  startKeyboardMonitoring()
 })
 
 // Don't quit when all windows closed (tray app)
@@ -280,5 +287,21 @@ function startIdleXpTick(): void {
       saveManager.save(saveData)
       broadcastSaveData()
     }
+    // Check fatigue
+    if (fatigueDetector.check()) {
+      petWindow?.webContents.send('fatigue-warning', null)
+    }
   }, 60_000)
+}
+
+// Keyboard monitoring for XP and fatigue
+function startKeyboardMonitoring(): void {
+  keyboardMonitor.start(() => {
+    if (!saveData) return
+    fatigueDetector.onKeystroke()
+    if (growthManager.addKeyboardXp(saveData)) {
+      saveManager.save(saveData)
+      broadcastSaveData()
+    }
+  })
 }
