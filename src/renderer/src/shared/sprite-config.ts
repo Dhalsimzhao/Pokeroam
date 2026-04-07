@@ -23,6 +23,15 @@ import venusaurHop from '../../../../resources/sprites/venusaur/Hop-Anim.png'
 import venusaurCharge from '../../../../resources/sprites/venusaur/Charge-Anim.png'
 import venusaurSwing from '../../../../resources/sprites/venusaur/Swing-Anim.png'
 import venusaurHurt from '../../../../resources/sprites/venusaur/Hurt-Anim.png'
+import charmanderIdle from '../../../../resources/sprites/charmander/Idle-Anim.png'
+import charmanderWalk from '../../../../resources/sprites/charmander/Walk-Anim.png'
+import charmanderSleep from '../../../../resources/sprites/charmander/Sleep-Anim.png'
+import charmanderHop from '../../../../resources/sprites/charmander/Hop-Anim.png'
+import charmanderEat from '../../../../resources/sprites/charmander/Eat-Anim.png'
+import charmanderPose from '../../../../resources/sprites/charmander/Pose-Anim.png'
+import charmanderCharge from '../../../../resources/sprites/charmander/Charge-Anim.png'
+import charmanderSwing from '../../../../resources/sprites/charmander/Swing-Anim.png'
+import charmanderHurt from '../../../../resources/sprites/charmander/Hurt-Anim.png'
 import charmeleonIdle from '../../../../resources/sprites/charmeleon/Idle-Anim.png'
 import charmeleonWalk from '../../../../resources/sprites/charmeleon/Walk-Anim.png'
 import charmeleonSleep from '../../../../resources/sprites/charmeleon/Sleep-Anim.png'
@@ -381,6 +390,81 @@ const VENUSAUR_SPRITES: PokemonSpriteSet = {
     src: venusaurHurt,
     frameWidth: 48,
     frameHeight: 48,
+    frameCount: 2,
+    durations: [2, 8],
+    row: RIGHT
+  },
+}
+
+const CHARMANDER_SPRITES: PokemonSpriteSet = {
+  idle: {
+    src: charmanderIdle,
+    frameWidth: 32,
+    frameHeight: 40,
+    frameCount: 4,
+    durations: [12, 8, 8, 8],
+    row: RIGHT
+  },
+  walk: {
+    src: charmanderWalk,
+    frameWidth: 32,
+    frameHeight: 32,
+    frameCount: 4,
+    durations: [6, 8, 6, 8],
+    row: RIGHT
+  },
+  sleep: {
+    src: charmanderSleep,
+    frameWidth: 32,
+    frameHeight: 24,
+    frameCount: 2,
+    durations: [30, 35],
+    row: 0
+  },
+  happy: {
+    src: charmanderHop,
+    frameWidth: 32,
+    frameHeight: 88,
+    frameCount: 10,
+    durations: [2, 1, 2, 3, 4, 4, 3, 2, 1, 2],
+    row: RIGHT
+  },
+  eat: {
+    src: charmanderEat,
+    frameWidth: 24,
+    frameHeight: 32,
+    frameCount: 4,
+    durations: [6, 8, 6, 8],
+    row: 0
+  },
+  levelup: {
+    src: charmanderPose,
+    frameWidth: 32,
+    frameHeight: 40,
+    frameCount: 3,
+    durations: [12, 2, 8],
+    row: RIGHT
+  },
+  evolve: {
+    src: charmanderCharge,
+    frameWidth: 32,
+    frameHeight: 40,
+    frameCount: 10,
+    durations: [2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    row: RIGHT
+  },
+  dragging: {
+    src: charmanderSwing,
+    frameWidth: 72,
+    frameHeight: 80,
+    frameCount: 9,
+    durations: [2, 1, 2, 2, 3, 2, 2, 1, 1],
+    row: RIGHT
+  },
+  falling: {
+    src: charmanderHurt,
+    frameWidth: 48,
+    frameHeight: 56,
     frameCount: 2,
     durations: [2, 8],
     row: RIGHT
