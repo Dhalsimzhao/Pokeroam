@@ -1,6 +1,6 @@
 import type { BrowserWindow } from 'electron'
 import type { SaveData, OwnedPokemon } from '../shared/types'
-import { POKEMON, getSpeciesById, getExpForLevel } from '../shared/pokemon-data'
+import { POKEMON_SPECIES, getSpeciesById, getExpForLevel } from '../shared/pokemon-data'
 import { IDLE_XP_PER_MINUTE, KEYBOARD_XP_PER_KEYSTROKE, MAX_LEVEL } from '../shared/constants'
 
 export class GrowthManager {
@@ -78,7 +78,7 @@ export class GrowthManager {
     if (!species) return false
 
     // Find evolution by level
-    const evolution = POKEMON.find(
+    const evolution = POKEMON_SPECIES.find(
       (s) =>
         s.evolvesFrom === pokemon.speciesId &&
         s.evolutionLevel !== null &&

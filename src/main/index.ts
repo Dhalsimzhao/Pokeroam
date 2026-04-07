@@ -8,7 +8,7 @@ import { KeyboardMonitor } from './keyboard-monitor'
 import { FatigueDetector } from './fatigue-detector'
 import { DailyRewardManager } from './daily-reward'
 import type { SaveData } from '../shared/types'
-import { POKEMON, getSpeciesById, getExpForLevel } from '../shared/pokemon-data'
+import { POKEMON_SPECIES, getSpeciesById, getExpForLevel } from '../shared/pokemon-data'
 import { MAX_LEVEL } from '../shared/constants'
 
 let petWindow: BrowserWindow | null = null
@@ -173,7 +173,7 @@ function setupIpcHandlers(): void {
         used = true
         // Check level-based evolution
         if (species.evolutionLevel && pokemon.level >= species.evolutionLevel) {
-          const nextSpecies = POKEMON.find(
+          const nextSpecies = POKEMON_SPECIES.find(
             (s) => s.evolvesFrom === species.id && s.evolutionLevel === species.evolutionLevel
           )
           if (nextSpecies) {
@@ -188,7 +188,7 @@ function setupIpcHandlers(): void {
       }
     } else if (['fire-stone', 'water-stone', 'thunder-stone', 'moon-stone'].includes(itemId)) {
       // Evolution stone — find matching evolution
-      const evolution = POKEMON.find(
+      const evolution = POKEMON_SPECIES.find(
         (s) => s.evolvesFrom === pokemon.speciesId && s.evolutionItem === itemId
       )
       if (evolution) {

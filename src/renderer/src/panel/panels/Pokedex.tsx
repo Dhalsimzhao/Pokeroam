@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { POKEMON } from '../../../../shared/pokemon-data'
+import { POKEMON_SPECIES } from '../../../../shared/pokemon-data'
 import { getEvolutionChain, getSpeciesById } from '../../../../shared/pokemon-data'
 import type { PokemonSpecies } from '../../../../shared/types'
 
@@ -36,7 +36,7 @@ export function Pokedex({ unlockedIds, onBack }: PokedexProps): JSX.Element {
         </button>
         <span style={{ fontSize: 16, fontWeight: 600, color: '#5d4e37' }}>Pokedex</span>
         <span style={{ fontSize: 12, color: '#999', marginLeft: 'auto' }}>
-          {unlockedIds.length}/{POKEMON.length} discovered
+          {unlockedIds.length}/{POKEMON_SPECIES.length} discovered
         </span>
       </div>
 
@@ -69,7 +69,7 @@ function GridView({
       alignContent: 'flex-start',
       overflowY: 'auto'
     }}>
-      {POKEMON.map((sp) => {
+      {POKEMON_SPECIES.map((sp) => {
         const unlocked = unlockedIds.includes(sp.id)
         return (
           <div
