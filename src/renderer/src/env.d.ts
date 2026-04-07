@@ -3,6 +3,9 @@
 interface ElectronAPI {
   platform: string
 
+  // Pet state query
+  getPetState: () => Promise<{ speciesId: number; level: number; nickname: string | null } | null>
+
   // Pet window events (returns unsubscribe function)
   onPetStateUpdate: (cb: (data: unknown) => void) => () => void
   onDragChange: (cb: (data: unknown) => void) => () => void

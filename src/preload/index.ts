@@ -18,6 +18,9 @@ contextBridge.exposeInMainWorld('api', {
   onLevelUp: (cb: Callback) => onIpc('pet-level-up', cb),
   onEvolve: (cb: Callback) => onIpc('pet-evolve', cb),
 
+  // Pet state query (pull model)
+  getPetState: () => ipcRenderer.invoke('get-pet-state'),
+
   // Pet window commands
   setClickThrough: (ignore: boolean): void => {
     ipcRenderer.send('set-click-through', ignore)

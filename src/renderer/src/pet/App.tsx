@@ -8,11 +8,18 @@ import { useIdleEvents } from './useIdleEvents'
 import { getSpriteConfig } from '../shared/sprite-config'
 
 export default function App(): JSX.Element {
-  const [speciesId, setSpeciesId] = useState<number>(4)
+  const [speciesId, setSpeciesId] = useState<number | null>(null)
   const [idleOverride, setIdleOverride] = useState<PetAnimState | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // Listen for species data from main process
+  // Pull initial state from main process on mount
+  useEffect(() => {
+    window.api.getPetState().then((data) => {
+      if (data) setSpeciesId(data.speciesId)
+    })
+  }, [])
+
+  // Listen for species data pushes from main process
   useEffect(() => {
     const unsub = window.api.onPetStateUpdate((data) => {
       const d = data as { speciesId: number } | null
@@ -53,7 +60,7 @@ export default function App(): JSX.Element {
     : animState
 
   // Sprite rendering
-  const spriteConfig = getSpriteConfig(speciesId, displayState)
+  const spriteConfig = speciesId ? getSpriteConfig(speciesId, displayState) : null
   const { frameIndex } = useAnimationLoop(spriteConfig)
 
   // Update hit regions for click-through detection

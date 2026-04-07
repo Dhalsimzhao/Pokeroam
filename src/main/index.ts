@@ -39,17 +39,19 @@ app.whenReady().then(() => {
   _tray = createTray(panelWindow)
   growthManager.setPetWindow(petWindow)
 
+  // Always send pet state once pet window finishes loading
+  petWindow.webContents.on('did-finish-load', () => {
+    sendPetState()
+  })
+
   // If no save (first launch), show panel for starter selection
   if (!saveData) {
+    petWindow.hide()
     panelWindow.show()
   } else {
     // Update lastLogin
     saveData.player.lastLogin = new Date().toISOString()
     saveManager.save(saveData)
-    // Send initial pet state to pet window once it finishes loading
-    petWindow.webContents.on('did-finish-load', () => {
-      sendPetState()
-    })
   }
 
   setupIpcHandlers()
@@ -98,6 +100,18 @@ function sendPetState(): void {
 function setupIpcHandlers(): void {
   // Get save data (for panel window)
   ipcMain.handle('get-save-data', () => saveData)
+
+  // Get pet state (for pet window to pull on mount)
+  ipcMain.handle('get-pet-state', () => {
+    if (!saveData?.activePokemonId) return null
+    const pokemon = saveData.pokemon.find((p) => p.id === saveData!.activePokemonId)
+    if (!pokemon) return null
+    return {
+      speciesId: pokemon.speciesId,
+      level: pokemon.level,
+      nickname: pokemon.nickname
+    }
+  })
 
   // Choose starter
   ipcMain.handle('choose-starter', (_e, speciesId: number) => {
