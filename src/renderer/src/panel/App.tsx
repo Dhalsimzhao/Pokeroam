@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { SaveData } from '../../../shared/types'
 import { BedroomScene, type PanelView } from './bedroom/BedroomScene'
+import { StarterSelect } from './starter/StarterSelect'
 
 export default function App(): JSX.Element {
   const [saveData, setSaveData] = useState<SaveData | null>(null)
@@ -83,7 +84,7 @@ export default function App(): JSX.Element {
         />
       )
     case 'starter':
-      return renderPanel('Choose Your Starter')
+      return <StarterSelect onSelected={() => setView('bedroom')} />
     case 'pc':
       return renderPanel('Pokemon PC')
     case 'pokedex':
