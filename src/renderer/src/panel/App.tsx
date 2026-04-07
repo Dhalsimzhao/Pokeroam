@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react'
 import type { SaveData } from '../../../shared/types'
 import { BedroomScene, type PanelView } from './bedroom/BedroomScene'
 import { StarterSelect } from './starter/StarterSelect'
+import { PokemonPC } from './panels/PokemonPC'
+import { Pokedex } from './panels/Pokedex'
+import { Backpack } from './panels/Backpack'
 
 export default function App(): JSX.Element {
   const [saveData, setSaveData] = useState<SaveData | null>(null)
@@ -28,8 +31,10 @@ export default function App(): JSX.Element {
 
   if (!loaded) return <div />
 
-  // Placeholder panel with back button
-  const renderPanel = (title: string): JSX.Element => (
+  const goBack = (): void => setView('bedroom')
+
+  // Placeholder for panels not yet implemented
+  const renderPlaceholder = (title: string): JSX.Element => (
     <div style={{
       width: 800,
       height: 600,
@@ -45,30 +50,15 @@ export default function App(): JSX.Element {
         gap: 12,
         borderBottom: '2px solid #d4b896'
       }}>
-        <button
-          onClick={() => setView('bedroom')}
-          style={{
-            border: 'none',
-            background: '#c0392b',
-            color: '#fff',
-            padding: '6px 14px',
-            borderRadius: 4,
-            cursor: 'pointer',
-            fontSize: 13,
-            fontWeight: 600
-          }}
-        >
-          Back
-        </button>
+        <button onClick={goBack} style={{
+          border: 'none', background: '#c0392b', color: '#fff',
+          padding: '6px 14px', borderRadius: 4, cursor: 'pointer', fontSize: 13, fontWeight: 600
+        }}>Back</button>
         <span style={{ fontSize: 16, fontWeight: 600, color: '#5d4e37' }}>{title}</span>
       </div>
       <div style={{
-        flex: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: '#999',
-        fontSize: 14
+        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: '#999', fontSize: 14
       }}>
         Coming soon...
       </div>
@@ -80,20 +70,26 @@ export default function App(): JSX.Element {
       return (
         <BedroomScene
           onNavigate={setView}
-          hasDailyReward={false} // will be computed in Task 15
+          hasDailyReward={false}
         />
       )
     case 'starter':
-      return <StarterSelect onSelected={() => setView('bedroom')} />
+      return <StarterSelect onSelected={goBack} />
     case 'pc':
-      return renderPanel('Pokemon PC')
+      return saveData
+        ? <PokemonPC saveData={saveData} onBack={goBack} />
+        : renderPlaceholder('Pokemon PC')
     case 'pokedex':
-      return renderPanel('Pokedex')
+      return saveData
+        ? <Pokedex unlockedIds={saveData.pokedex} onBack={goBack} />
+        : renderPlaceholder('Pokedex')
     case 'backpack':
-      return renderPanel('Backpack')
+      return saveData
+        ? <Backpack saveData={saveData} onBack={goBack} />
+        : renderPlaceholder('Backpack')
     case 'daily-reward':
-      return renderPanel('Daily Reward')
+      return renderPlaceholder('Daily Reward')
     default:
-      return renderPanel('PokéRoam')
+      return renderPlaceholder('PokéRoam')
   }
 }

@@ -4,6 +4,8 @@ import { createPetWindow } from './pet-window'
 import { createPanelWindow } from './panel-window'
 import { createTray } from './tray-manager'
 import type { SaveData } from '../shared/types'
+import { POKEMON, getSpeciesById, getExpForLevel } from '../shared/pokemon-data'
+import { MAX_LEVEL } from '../shared/constants'
 
 let petWindow: BrowserWindow | null = null
 let panelWindow: BrowserWindow | null = null
@@ -135,10 +137,74 @@ function setupIpcHandlers(): void {
     return true
   })
 
-  // Use item on Pokemon (will be expanded in Task 12)
-  ipcMain.handle('use-item', (_e, _itemId: string, _pokemonId: string) => {
-    // Placeholder - full implementation in Task 12 (Backpack Panel)
-    return false
+  // Use item on Pokemon
+  ipcMain.handle('use-item', (_e, itemId: string, pokemonId: string) => {
+    if (!saveData) return false
+    const pokemon = saveData.pokemon.find((p) => p.id === pokemonId)
+    if (!pokemon) return false
+    const bpItem = saveData.backpack.find((b) => b.itemId === itemId)
+    if (!bpItem || bpItem.quantity <= 0) return false
+
+    const species = getSpeciesById(pokemon.speciesId)
+    if (!species) return false
+
+    let used = false
+
+    if (itemId === 'rare-candy') {
+      // Level up by 1
+      if (pokemon.level < MAX_LEVEL) {
+        pokemon.level++
+        pokemon.exp = getExpForLevel(species.expGroup, pokemon.level)
+        used = true
+        // Check level-based evolution
+        if (species.evolutionLevel && pokemon.level >= species.evolutionLevel) {
+          const nextSpecies = POKEMON.find(
+            (s) => s.evolvesFrom === species.id && s.evolutionLevel === species.evolutionLevel
+          )
+          if (nextSpecies) {
+            pokemon.speciesId = nextSpecies.id
+            if (!saveData.pokedex.includes(nextSpecies.id)) {
+              saveData.pokedex.push(nextSpecies.id)
+            }
+            petWindow?.webContents.send('pet-evolve', { speciesId: nextSpecies.id })
+          }
+        }
+        petWindow?.webContents.send('pet-level-up', { level: pokemon.level })
+      }
+    } else if (['fire-stone', 'water-stone', 'thunder-stone', 'moon-stone'].includes(itemId)) {
+      // Evolution stone — find matching evolution
+      const evolution = POKEMON.find(
+        (s) => s.evolvesFrom === pokemon.speciesId && s.evolutionItem === itemId
+      )
+      if (evolution) {
+        pokemon.speciesId = evolution.id
+        if (!saveData.pokedex.includes(evolution.id)) {
+          saveData.pokedex.push(evolution.id)
+        }
+        petWindow?.webContents.send('pet-evolve', { speciesId: evolution.id })
+        used = true
+      }
+    } else if (itemId === 'moomoo-milk') {
+      // Small XP boost
+      pokemon.exp += 50
+      // Check if enough for level up
+      if (pokemon.level < MAX_LEVEL) {
+        const nextLevelExp = getExpForLevel(species.expGroup, pokemon.level + 1)
+        if (pokemon.exp >= nextLevelExp) {
+          pokemon.level++
+          petWindow?.webContents.send('pet-level-up', { level: pokemon.level })
+        }
+      }
+      used = true
+    }
+
+    if (used) {
+      bpItem.quantity--
+      saveData.backpack = saveData.backpack.filter((b) => b.quantity > 0)
+      saveManager.save(saveData)
+      broadcastSaveData()
+    }
+    return used
   })
 
   // Claim daily reward (placeholder for Task 15)
