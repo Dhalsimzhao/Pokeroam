@@ -6,6 +6,7 @@ import { createTray } from './tray-manager'
 import { GrowthManager } from './growth-manager'
 import { KeyboardMonitor } from './keyboard-monitor'
 import { FatigueDetector } from './fatigue-detector'
+import { DailyRewardManager } from './daily-reward'
 import type { SaveData } from '../shared/types'
 import { POKEMON, getSpeciesById, getExpForLevel } from '../shared/pokemon-data'
 import { MAX_LEVEL } from '../shared/constants'
@@ -17,6 +18,7 @@ let saveManager: SaveManager
 let growthManager: GrowthManager
 let keyboardMonitor: KeyboardMonitor
 let fatigueDetector: FatigueDetector
+let dailyRewardManager: DailyRewardManager
 let saveData: SaveData | null = null
 
 // Hit regions for Windows click-through polling
@@ -28,6 +30,7 @@ app.whenReady().then(() => {
   growthManager = new GrowthManager()
   keyboardMonitor = new KeyboardMonitor()
   fatigueDetector = new FatigueDetector()
+  dailyRewardManager = new DailyRewardManager()
   saveData = saveManager.load()
 
   petWindow = createPetWindow()
@@ -219,9 +222,20 @@ function setupIpcHandlers(): void {
     return used
   })
 
-  // Claim daily reward (placeholder for Task 15)
+  // Claim daily reward
   ipcMain.handle('claim-daily-reward', () => {
-    return null
+    if (!saveData || !dailyRewardManager.isAvailable(saveData)) return null
+    const reward = dailyRewardManager.generateReward(saveData)
+    dailyRewardManager.claimReward(saveData, reward)
+    saveManager.save(saveData)
+    broadcastSaveData()
+    return reward
+  })
+
+  // Check daily reward availability
+  ipcMain.handle('is-daily-reward-available', () => {
+    if (!saveData) return false
+    return dailyRewardManager.isAvailable(saveData)
   })
 
   // Open panel window

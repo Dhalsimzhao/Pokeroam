@@ -5,11 +5,13 @@ import { StarterSelect } from './starter/StarterSelect'
 import { PokemonPC } from './panels/PokemonPC'
 import { Pokedex } from './panels/Pokedex'
 import { Backpack } from './panels/Backpack'
+import { DailyReward } from './panels/DailyReward'
 
 export default function App(): JSX.Element {
   const [saveData, setSaveData] = useState<SaveData | null>(null)
   const [view, setView] = useState<PanelView>('bedroom')
   const [loaded, setLoaded] = useState(false)
+  const [hasDailyReward, setHasDailyReward] = useState(false)
 
   // Load initial save data
   useEffect(() => {
@@ -18,6 +20,7 @@ export default function App(): JSX.Element {
       setLoaded(true)
       if (!data) setView('starter')
     })
+    window.api.isDailyRewardAvailable().then(setHasDailyReward)
   }, [])
 
   // Listen for save data changes
@@ -31,7 +34,10 @@ export default function App(): JSX.Element {
 
   if (!loaded) return <div />
 
-  const goBack = (): void => setView('bedroom')
+  const goBack = (): void => {
+    setView('bedroom')
+    window.api.isDailyRewardAvailable().then(setHasDailyReward)
+  }
 
   // Placeholder for panels not yet implemented
   const renderPlaceholder = (title: string): JSX.Element => (
@@ -70,7 +76,7 @@ export default function App(): JSX.Element {
       return (
         <BedroomScene
           onNavigate={setView}
-          hasDailyReward={false}
+          hasDailyReward={hasDailyReward}
         />
       )
     case 'starter':
@@ -88,7 +94,7 @@ export default function App(): JSX.Element {
         ? <Backpack saveData={saveData} onBack={goBack} />
         : renderPlaceholder('Backpack')
     case 'daily-reward':
-      return renderPlaceholder('Daily Reward')
+      return <DailyReward onBack={goBack} />
     default:
       return renderPlaceholder('PokéRoam')
   }

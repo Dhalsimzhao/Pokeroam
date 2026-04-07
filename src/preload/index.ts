@@ -49,6 +49,7 @@ contextBridge.exposeInMainWorld('api', {
   useItem: (itemId: string, pokemonId: string) =>
     ipcRenderer.invoke('use-item', itemId, pokemonId),
   claimDailyReward: () => ipcRenderer.invoke('claim-daily-reward'),
+  isDailyRewardAvailable: () => ipcRenderer.invoke('is-daily-reward-available'),
 
   // Window management
   openPanel: (): void => {
