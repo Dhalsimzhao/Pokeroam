@@ -1,10 +1,15 @@
 import { useEffect, useState } from 'react'
+import type { PetAnimState } from '../../../shared/types'
+import { SpriteCanvas } from './SpriteCanvas'
+import { useAnimationLoop } from './useAnimationLoop'
+import { getSpriteConfig } from '../shared/sprite-config'
 
 export default function App(): JSX.Element {
   const [petState, setPetState] = useState<{
     speciesId: number
     level: number
-    nickname: string | null
+    animState: PetAnimState
+    facingLeft: boolean
   } | null>(null)
 
   useEffect(() => {
@@ -14,25 +19,35 @@ export default function App(): JSX.Element {
     return unsub
   }, [])
 
+  // Default to Charmander idle for testing when no IPC state yet
+  const speciesId = petState?.speciesId ?? 4
+  const animState = petState?.animState ?? 'idle'
+  const facingLeft = petState?.facingLeft ?? false
+
+  const spriteConfig = getSpriteConfig(speciesId, animState)
+  const { frameIndex } = useAnimationLoop(spriteConfig)
+
   return (
     <div
       style={{
         width: '100%',
         height: '100%',
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-end',
         justifyContent: 'center',
         background: 'transparent',
         userSelect: 'none'
       }}
     >
-      {petState ? (
-        <div style={{ color: '#fff', textAlign: 'center', fontSize: 12 }}>
-          <div>#{petState.speciesId}</div>
-          <div>Lv.{petState.level}</div>
-        </div>
+      {spriteConfig ? (
+        <SpriteCanvas
+          spriteConfig={spriteConfig}
+          frameIndex={frameIndex}
+          facingLeft={facingLeft}
+          scale={2}
+        />
       ) : (
-        <div style={{ color: '#888', fontSize: 11 }}>Pet Window Ready</div>
+        <div style={{ color: '#888', fontSize: 11 }}>No sprite</div>
       )}
     </div>
   )

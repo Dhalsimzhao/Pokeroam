@@ -77,6 +77,7 @@ export interface SpriteSheetConfig {
   frameHeight: number
   frameCount: number
   durations: number[]
+  row?: number // grid row to render (for PMD Collab multi-direction sheets). Default: 0
 }
 
 export type PetAnimState =
