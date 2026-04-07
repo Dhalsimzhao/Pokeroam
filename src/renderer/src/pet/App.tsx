@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import type { PetAnimState } from '../../../shared/types'
 import { SpriteCanvas } from './SpriteCanvas'
 import { useAnimationLoop } from './useAnimationLoop'
 import { usePetPhysics } from './usePetPhysics'
 import { usePetDrag } from './usePetDrag'
+import { useIdleEvents } from './useIdleEvents'
 import { getSpriteConfig } from '../shared/sprite-config'
 
 export default function App(): JSX.Element {
-  const [speciesId, setSpeciesId] = useState<number>(4) // default Charmander for testing
+  const [speciesId, setSpeciesId] = useState<number>(4)
+  const [idleOverride, setIdleOverride] = useState<PetAnimState | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
   // Listen for species data from main process
@@ -27,8 +30,20 @@ export default function App(): JSX.Element {
     onDragEnd: endDrag
   })
 
+  // Random idle events
+  useIdleEvents(
+    animState,
+    useCallback((state: PetAnimState) => setIdleOverride(state), []),
+    useCallback(() => setIdleOverride(null), [])
+  )
+
+  // Resolve final anim state (idle override takes precedence when grounded)
+  const displayState = idleOverride && (animState === 'idle' || animState === 'walk')
+    ? idleOverride
+    : animState
+
   // Sprite rendering
-  const spriteConfig = getSpriteConfig(speciesId, animState)
+  const spriteConfig = getSpriteConfig(speciesId, displayState)
   const { frameIndex } = useAnimationLoop(spriteConfig)
 
   // Update hit regions for click-through detection
