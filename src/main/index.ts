@@ -1,11 +1,13 @@
-import { app, BrowserWindow, ipcMain, screen } from 'electron'
+import { app, BrowserWindow, ipcMain, screen, Tray } from 'electron'
 import { SaveManager } from './save-manager'
 import { createPetWindow } from './pet-window'
 import { createPanelWindow } from './panel-window'
+import { createTray } from './tray-manager'
 import type { SaveData } from '../shared/types'
 
 let petWindow: BrowserWindow | null = null
 let panelWindow: BrowserWindow | null = null
+let _tray: Tray | null = null
 let saveManager: SaveManager
 let saveData: SaveData | null = null
 
@@ -19,6 +21,7 @@ app.whenReady().then(() => {
 
   petWindow = createPetWindow()
   panelWindow = createPanelWindow()
+  _tray = createTray(panelWindow)
 
   // If no save (first launch), show panel for starter selection
   if (!saveData) {
