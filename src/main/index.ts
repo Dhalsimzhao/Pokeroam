@@ -149,6 +149,15 @@ function setupIpcHandlers(): void {
     panelWindow?.focus()
   })
 
+  // Pet window position control
+  ipcMain.handle('get-work-area', () => {
+    return screen.getPrimaryDisplay().workArea
+  })
+
+  ipcMain.on('set-pet-position', (_e, x: number, y: number) => {
+    petWindow?.setPosition(Math.round(x), Math.round(y))
+  })
+
   // Click-through control
   ipcMain.on('set-click-through', (_e, ignore: boolean) => {
     petWindow?.setIgnoreMouseEvents(ignore, { forward: true })

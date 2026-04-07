@@ -25,6 +25,10 @@ contextBridge.exposeInMainWorld('api', {
   dragMove: (dx: number, dy: number): void => {
     ipcRenderer.send('drag-move', dx, dy)
   },
+  setPetPosition: (x: number, y: number): void => {
+    ipcRenderer.send('set-pet-position', x, y)
+  },
+  getWorkArea: () => ipcRenderer.invoke('get-work-area'),
   updateHitRegions: (
     regions: Array<{ x: number; y: number; width: number; height: number }>
   ): void => {

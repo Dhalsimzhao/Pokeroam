@@ -1,31 +1,51 @@
-import { useEffect, useState } from 'react'
-import type { PetAnimState } from '../../../shared/types'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { SpriteCanvas } from './SpriteCanvas'
 import { useAnimationLoop } from './useAnimationLoop'
+import { usePetPhysics } from './usePetPhysics'
+import { usePetDrag } from './usePetDrag'
 import { getSpriteConfig } from '../shared/sprite-config'
 
 export default function App(): JSX.Element {
-  const [petState, setPetState] = useState<{
-    speciesId: number
-    level: number
-    animState: PetAnimState
-    facingLeft: boolean
-  } | null>(null)
+  const [speciesId, setSpeciesId] = useState<number>(4) // default Charmander for testing
+  const containerRef = useRef<HTMLDivElement>(null)
 
+  // Listen for species data from main process
   useEffect(() => {
     const unsub = window.api.onPetStateUpdate((data) => {
-      setPetState(data as typeof petState)
+      const d = data as { speciesId: number } | null
+      if (d) setSpeciesId(d.speciesId)
     })
     return unsub
   }, [])
 
-  // Default to Charmander idle for testing when no IPC state yet
-  const speciesId = petState?.speciesId ?? 4
-  const animState = petState?.animState ?? 'idle'
-  const facingLeft = petState?.facingLeft ?? false
+  // Physics: walking, gravity, anim state
+  const { animState, facingLeft, startDrag, endDrag } = usePetPhysics()
 
+  // Drag & drop
+  usePetDrag(containerRef, {
+    onDragStart: startDrag,
+    onDragEnd: endDrag
+  })
+
+  // Sprite rendering
   const spriteConfig = getSpriteConfig(speciesId, animState)
   const { frameIndex } = useAnimationLoop(spriteConfig)
+
+  // Update hit regions for click-through detection
+  const updateHitRegions = useCallback(() => {
+    const el = containerRef.current
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    window.api.updateHitRegions([
+      { x: rect.x, y: rect.y, width: rect.width, height: rect.height }
+    ])
+  }, [])
+
+  useEffect(() => {
+    updateHitRegions()
+    const id = setInterval(updateHitRegions, 500)
+    return () => clearInterval(id)
+  }, [updateHitRegions])
 
   return (
     <div
@@ -39,16 +59,18 @@ export default function App(): JSX.Element {
         userSelect: 'none'
       }}
     >
-      {spriteConfig ? (
-        <SpriteCanvas
-          spriteConfig={spriteConfig}
-          frameIndex={frameIndex}
-          facingLeft={facingLeft}
-          scale={2}
-        />
-      ) : (
-        <div style={{ color: '#888', fontSize: 11 }}>No sprite</div>
-      )}
+      <div ref={containerRef} style={{ cursor: 'grab' }}>
+        {spriteConfig ? (
+          <SpriteCanvas
+            spriteConfig={spriteConfig}
+            frameIndex={frameIndex}
+            facingLeft={facingLeft}
+            scale={2}
+          />
+        ) : (
+          <div style={{ color: '#888', fontSize: 11 }}>No sprite</div>
+        )}
+      </div>
     </div>
   )
 }

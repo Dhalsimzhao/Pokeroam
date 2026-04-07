@@ -13,6 +13,8 @@ interface ElectronAPI {
   // Pet window commands
   setClickThrough: (ignore: boolean) => void
   dragMove: (dx: number, dy: number) => void
+  setPetPosition: (x: number, y: number) => void
+  getWorkArea: () => Promise<{ x: number; y: number; width: number; height: number }>
   updateHitRegions: (
     regions: Array<{ x: number; y: number; width: number; height: number }>
   ) => void
