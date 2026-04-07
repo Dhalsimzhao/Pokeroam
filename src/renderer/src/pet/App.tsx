@@ -21,6 +21,16 @@ export default function App(): JSX.Element {
     return unsub
   }, [])
 
+  // Right-click context menu
+  useEffect(() => {
+    const handler = (e: MouseEvent): void => {
+      e.preventDefault()
+      window.api.showContextMenu()
+    }
+    window.addEventListener('contextmenu', handler)
+    return () => window.removeEventListener('contextmenu', handler)
+  }, [])
+
   // Physics: walking, gravity, anim state
   const { animState, facingLeft, startDrag, endDrag } = usePetPhysics()
 

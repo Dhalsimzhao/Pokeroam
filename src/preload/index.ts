@@ -51,6 +51,11 @@ contextBridge.exposeInMainWorld('api', {
   claimDailyReward: () => ipcRenderer.invoke('claim-daily-reward'),
   isDailyRewardAvailable: () => ipcRenderer.invoke('is-daily-reward-available'),
 
+  // Context menu
+  showContextMenu: (): void => {
+    ipcRenderer.send('show-context-menu')
+  },
+
   // Window management
   openPanel: (): void => {
     ipcRenderer.send('open-panel')

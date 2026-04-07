@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, screen, Tray } from 'electron'
+import { app, BrowserWindow, ipcMain, Menu, screen, Tray } from 'electron'
 import { SaveManager } from './save-manager'
 import { createPetWindow } from './pet-window'
 import { createPanelWindow } from './panel-window'
@@ -9,6 +9,7 @@ import { FatigueDetector } from './fatigue-detector'
 import { DailyRewardManager } from './daily-reward'
 import type { SaveData } from '../shared/types'
 import { POKEMON_SPECIES, getSpeciesById, getExpForLevel } from '../shared/pokemon-data'
+import { getItemById, ITEMS } from '../shared/item-data'
 import { MAX_LEVEL } from '../shared/constants'
 
 let petWindow: BrowserWindow | null = null
@@ -236,6 +237,54 @@ function setupIpcHandlers(): void {
   ipcMain.handle('is-daily-reward-available', () => {
     if (!saveData) return false
     return dailyRewardManager.isAvailable(saveData)
+  })
+
+  // Right-click context menu on pet
+  ipcMain.on('show-context-menu', () => {
+    if (!petWindow || !saveData?.activePokemonId) return
+    const pokemon = saveData.pokemon.find((p) => p.id === saveData!.activePokemonId)
+    if (!pokemon) return
+    const species = getSpeciesById(pokemon.speciesId)
+
+    // Food items in backpack
+    const foodItems = saveData.backpack
+      .filter((b) => {
+        const item = getItemById(b.itemId)
+        return item && item.category === 'food' && b.quantity > 0
+      })
+      .map((b) => {
+        const item = getItemById(b.itemId)!
+        return {
+          label: `${item.nameZh} ×${b.quantity}`,
+          click: (): void => {
+            // Use item via existing handler logic
+            petWindow?.webContents.send('context-menu-feed', b.itemId)
+          }
+        }
+      })
+
+    const template: Electron.MenuItemConstructorOptions[] = [
+      {
+        label: `${species?.nameZh ?? 'Pokemon'} Lv.${pokemon.level}`,
+        enabled: false
+      },
+      { type: 'separator' },
+      {
+        label: 'Feed',
+        submenu: foodItems.length > 0 ? foodItems : [{ label: 'No food items', enabled: false }]
+      },
+      { type: 'separator' },
+      {
+        label: 'Open PokéRoam',
+        click: (): void => {
+          panelWindow?.show()
+          panelWindow?.focus()
+        }
+      }
+    ]
+
+    const menu = Menu.buildFromTemplate(template)
+    menu.popup({ window: petWindow })
   })
 
   // Open panel window

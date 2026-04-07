@@ -32,6 +32,7 @@ interface ElectronAPI {
   useItem: (itemId: string, pokemonId: string) => Promise<boolean>
   claimDailyReward: () => Promise<unknown>
   isDailyRewardAvailable: () => Promise<boolean>
+  showContextMenu: () => void
   openPanel: () => void
 }
 
