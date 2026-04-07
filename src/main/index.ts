@@ -63,6 +63,14 @@ app.on('window-all-closed', () => {
   // Do nothing — app stays alive for the tray/pet window
 })
 
+// Save on quit
+app.on('before-quit', () => {
+  if (saveData) {
+    saveManager.save(saveData)
+  }
+  keyboardMonitor.stop()
+})
+
 function broadcastSaveData(): void {
   panelWindow?.webContents.send('save-data-changed', saveData)
   sendPetState()
@@ -70,16 +78,20 @@ function broadcastSaveData(): void {
 
 function sendPetState(): void {
   if (!saveData?.activePokemonId) {
+    petWindow?.hide()
     petWindow?.webContents.send('pet-state-update', null)
     return
   }
   const pokemon = saveData.pokemon.find((p) => p.id === saveData!.activePokemonId)
   if (pokemon) {
+    petWindow?.show()
     petWindow?.webContents.send('pet-state-update', {
       speciesId: pokemon.speciesId,
       level: pokemon.level,
       nickname: pokemon.nickname
     })
+  } else {
+    petWindow?.hide()
   }
 }
 
