@@ -3,6 +3,7 @@ import { SaveManager } from './save-manager'
 import { createPetWindow } from './pet-window'
 import { createPanelWindow } from './panel-window'
 import { createTray } from './tray-manager'
+import { GrowthManager } from './growth-manager'
 import type { SaveData } from '../shared/types'
 import { POKEMON, getSpeciesById, getExpForLevel } from '../shared/pokemon-data'
 import { MAX_LEVEL } from '../shared/constants'
@@ -11,6 +12,7 @@ let petWindow: BrowserWindow | null = null
 let panelWindow: BrowserWindow | null = null
 let _tray: Tray | null = null
 let saveManager: SaveManager
+let growthManager: GrowthManager
 let saveData: SaveData | null = null
 
 // Hit regions for Windows click-through polling
@@ -19,11 +21,13 @@ let cursorInside = false
 
 app.whenReady().then(() => {
   saveManager = new SaveManager()
+  growthManager = new GrowthManager()
   saveData = saveManager.load()
 
   petWindow = createPetWindow()
   panelWindow = createPanelWindow()
   _tray = createTray(panelWindow)
+  growthManager.setPetWindow(petWindow)
 
   // If no save (first launch), show panel for starter selection
   if (!saveData) {
@@ -40,6 +44,7 @@ app.whenReady().then(() => {
 
   setupIpcHandlers()
   startClickThroughPolling()
+  startIdleXpTick()
 })
 
 // Don't quit when all windows closed (tray app)
@@ -265,4 +270,15 @@ function startClickThroughPolling(): void {
       petWindow.setIgnoreMouseEvents(!inside, { forward: true })
     }
   }, 16)
+}
+
+// Idle XP tick — every 60 seconds
+function startIdleXpTick(): void {
+  setInterval(() => {
+    if (!saveData) return
+    if (growthManager.tickIdle(saveData)) {
+      saveManager.save(saveData)
+      broadcastSaveData()
+    }
+  }, 60_000)
 }
