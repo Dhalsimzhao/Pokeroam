@@ -290,13 +290,50 @@
   transform: translate(-50%, -50%);
 }
 
-.pokeball--bounce {
-  animation: pokeball-bounce 2s ease-in-out infinite;
+.pokeball--wobble {
+  animation: pokeball-wobble 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  transform-origin: bottom center;
 }
 
-@keyframes pokeball-bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+@keyframes pokeball-wobble {
+  0%   { transform: rotate(0deg); }
+  2%   { transform: rotate(-20deg); }
+  6%   { transform: rotate(18deg); }
+  10%  { transform: rotate(-14deg); }
+  13%  { transform: rotate(8deg); }
+  16%  { transform: rotate(0deg); }
+  /* Pause */
+  30%  { transform: rotate(0deg); }
+  32%  { transform: rotate(-20deg); }
+  36%  { transform: rotate(18deg); }
+  40%  { transform: rotate(-14deg); }
+  43%  { transform: rotate(8deg); }
+  46%  { transform: rotate(0deg); }
+  /* Long pause before loop */
+  100% { transform: rotate(0deg); }
+}
+
+/* Open / empty Pokéball state */
+.pokeball--open {
+  overflow: visible;
+  border-color: transparent;
+}
+
+.pokeball--open .pokeball-top {
+  border: 2px solid #333;
+  border-radius: 36px 36px 0 0;
+  transform: translateY(-6px);
+  transition: transform 0.3s ease-out;
+}
+
+.pokeball--open .pokeball-bottom {
+  border: 2px solid #333;
+  border-radius: 0 0 36px 36px;
+}
+
+.pokeball--open .pokeball-line,
+.pokeball--open .pokeball-center {
+  display: none;
 }
 
 /* ---- Chair & Backpack ---- */

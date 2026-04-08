@@ -70,7 +70,8 @@ export function DailyReward({ onBack }: DailyRewardProps): JSX.Element {
                 cursor: 'pointer',
                 position: 'relative',
                 boxShadow: '0 6px 24px rgba(0,0,0,0.3)',
-                animation: 'pokeball-bounce 2s ease-in-out infinite'
+                animation: 'pokeball-wobble 3s cubic-bezier(0.4, 0, 0.2, 1) infinite',
+                transformOrigin: 'bottom center'
               }}
             >
               <div style={{ width: '100%', height: '50%', background: '#e74c3c' }} />
@@ -185,9 +186,20 @@ export function DailyReward({ onBack }: DailyRewardProps): JSX.Element {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        @keyframes pokeball-bounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-8px); }
+        @keyframes pokeball-wobble {
+          0%   { transform: rotate(0deg); }
+          2%   { transform: rotate(-20deg); }
+          6%   { transform: rotate(18deg); }
+          10%  { transform: rotate(-14deg); }
+          13%  { transform: rotate(8deg); }
+          16%  { transform: rotate(0deg); }
+          30%  { transform: rotate(0deg); }
+          32%  { transform: rotate(-20deg); }
+          36%  { transform: rotate(18deg); }
+          40%  { transform: rotate(-14deg); }
+          43%  { transform: rotate(8deg); }
+          46%  { transform: rotate(0deg); }
+          100% { transform: rotate(0deg); }
         }
       `}</style>
     </div>

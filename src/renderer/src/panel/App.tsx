@@ -6,7 +6,6 @@ import { StarterSelect } from './starter/StarterSelect'
 import { PokemonPC } from './panels/PokemonPC'
 import { Pokedex } from './panels/Pokedex'
 import { Backpack } from './panels/Backpack'
-import { DailyReward } from './panels/DailyReward'
 
 export default function App(): JSX.Element {
   const [saveData, setSaveData] = useState<SaveData | null>(null)
@@ -38,7 +37,6 @@ export default function App(): JSX.Element {
 
   const goBack = (): void => {
     setView('bedroom')
-    window.api.isDailyRewardAvailable().then(setHasDailyReward)
   }
 
   // Placeholder for panels not yet implemented
@@ -79,6 +77,7 @@ export default function App(): JSX.Element {
         <BedroomScene
           onNavigate={setView}
           hasDailyReward={hasDailyReward}
+          onRewardClaimed={() => setHasDailyReward(false)}
         />
       )
     case 'starter':
@@ -95,8 +94,6 @@ export default function App(): JSX.Element {
       return saveData
         ? <Backpack saveData={saveData} onBack={goBack} />
         : renderPlaceholder(t.backpack)
-    case 'daily-reward':
-      return <DailyReward onBack={goBack} />
     default:
       return renderPlaceholder('PokéRoam')
   }

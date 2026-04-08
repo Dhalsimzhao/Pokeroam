@@ -27,6 +27,13 @@ export const zh: Locale = {
   discovered: '已发现',
   evolutionChain: '进化链',
   lv: 'Lv.',
+  individualInfo: '个体信息',
+  baseExp: '基础经验',
+  expGroup: '经验组',
+  expGroupFast: '快',
+  expGroupMediumFast: '较快',
+  expGroupMediumSlow: '较慢',
+  expGroupSlow: '慢',
 
   // Backpack
   items: '件道具',

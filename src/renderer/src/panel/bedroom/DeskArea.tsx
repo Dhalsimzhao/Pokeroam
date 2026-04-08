@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { useI18n } from '../../shared/i18n'
 
 interface DeskAreaProps {
@@ -14,6 +15,24 @@ export function DeskArea({
   hasDailyReward
 }: DeskAreaProps): JSX.Element {
   const { t } = useI18n()
+  const [pokeballOpen, setPokeballOpen] = useState(false)
+
+  // Reset open state when a new reward becomes available
+  useEffect(() => {
+    if (hasDailyReward) setPokeballOpen(false)
+  }, [hasDailyReward])
+
+  const handlePokeballClick = (): void => {
+    if (hasDailyReward) {
+      onClickPokeball()
+    } else {
+      setPokeballOpen((prev) => !prev)
+    }
+  }
+
+  const pokeballClass = `desk-object pokeball${
+    hasDailyReward ? ' pokeball--wobble' : pokeballOpen ? ' pokeball--open' : ''
+  }`
 
   return (
     <div className="desk">
@@ -33,10 +52,7 @@ export function DeskArea({
         </div>
 
         {/* Poké Ball (daily reward) */}
-        <div
-          className={`desk-object pokeball${hasDailyReward ? ' pokeball--bounce' : ''}`}
-          onClick={onClickPokeball}
-        >
+        <div className={pokeballClass} onClick={handlePokeballClick}>
           <div className="pokeball-top" />
           <div className="pokeball-bottom" />
           <div className="pokeball-line" />

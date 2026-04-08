@@ -27,6 +27,13 @@ export interface Locale {
   discovered: string
   evolutionChain: string
   lv: string
+  individualInfo: string
+  baseExp: string
+  expGroup: string
+  expGroupFast: string
+  expGroupMediumFast: string
+  expGroupMediumSlow: string
+  expGroupSlow: string
 
   // Backpack
   items: string

@@ -27,6 +27,13 @@ export const en: Locale = {
   discovered: 'discovered',
   evolutionChain: 'Evolution Chain',
   lv: 'Lv.',
+  individualInfo: 'Individual Info',
+  baseExp: 'Base Exp',
+  expGroup: 'Exp Group',
+  expGroupFast: 'Fast',
+  expGroupMediumFast: 'Medium Fast',
+  expGroupMediumSlow: 'Medium Slow',
+  expGroupSlow: 'Slow',
 
   // Backpack
   items: 'items',
