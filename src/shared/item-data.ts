@@ -6,6 +6,7 @@ export const ITEMS: ItemDefinition[] = [
     name: 'Moomoo Milk',
     nameZh: '哞哞牛奶',
     description: 'Heals and makes Pokemon happy',
+    descriptionZh: '治愈并让宝可梦开心',
     category: 'food',
     holdable: false
   },
@@ -14,6 +15,7 @@ export const ITEMS: ItemDefinition[] = [
     name: 'Rare Candy',
     nameZh: '神奇糖果',
     description: 'Instantly raises level by 1',
+    descriptionZh: '立即提升1级',
     category: 'food',
     holdable: false
   },
@@ -22,6 +24,7 @@ export const ITEMS: ItemDefinition[] = [
     name: 'Exp. Share',
     nameZh: '学习装置',
     description: 'Holder gains same XP as active Pokemon',
+    descriptionZh: '持有者获得与出战宝可梦相同的经验值',
     category: 'equipment',
     holdable: true
   },
@@ -30,6 +33,7 @@ export const ITEMS: ItemDefinition[] = [
     name: 'Fire Stone',
     nameZh: '火之石',
     description: 'Evolves certain Pokemon',
+    descriptionZh: '使特定宝可梦进化',
     category: 'equipment',
     holdable: false
   },
@@ -38,6 +42,7 @@ export const ITEMS: ItemDefinition[] = [
     name: 'Water Stone',
     nameZh: '水之石',
     description: 'Evolves certain Pokemon',
+    descriptionZh: '使特定宝可梦进化',
     category: 'equipment',
     holdable: false
   },
@@ -46,6 +51,7 @@ export const ITEMS: ItemDefinition[] = [
     name: 'Thunder Stone',
     nameZh: '雷之石',
     description: 'Evolves certain Pokemon',
+    descriptionZh: '使特定宝可梦进化',
     category: 'equipment',
     holdable: false
   },
@@ -54,6 +60,7 @@ export const ITEMS: ItemDefinition[] = [
     name: 'Moon Stone',
     nameZh: '月之石',
     description: 'Evolves certain Pokemon',
+    descriptionZh: '使特定宝可梦进化',
     category: 'equipment',
     holdable: false
   }

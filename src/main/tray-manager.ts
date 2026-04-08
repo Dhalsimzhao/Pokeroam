@@ -1,5 +1,6 @@
 import { Tray, Menu, nativeImage, BrowserWindow } from 'electron'
 import { join } from 'path'
+import { getLocale, type LangCode } from '../shared/i18n'
 
 function createTrayIcon(): Electron.NativeImage {
   const iconPath = join(__dirname, '../../resources/icon.png')
@@ -14,13 +15,16 @@ function createTrayIcon(): Electron.NativeImage {
   return icon.resize({ width: 16, height: 16 })
 }
 
-export function createTray(panelWindow: BrowserWindow): Tray {
-  const tray = new Tray(createTrayIcon())
-  tray.setToolTip('PokéRoam')
-
+export function buildTrayMenu(
+  tray: Tray,
+  panelWindow: BrowserWindow,
+  lang: LangCode,
+  onLangChange: (lang: LangCode) => void
+): void {
+  const t = getLocale(lang)
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: 'Open PokéRoam',
+      label: t.openPokeroam,
       click: () => {
         panelWindow.show()
         panelWindow.focus()
@@ -28,17 +32,44 @@ export function createTray(panelWindow: BrowserWindow): Tray {
     },
     { type: 'separator' },
     {
-      label: 'Quit',
+      label: t.language,
+      submenu: [
+        {
+          label: t.langZh,
+          type: 'radio',
+          checked: lang === 'zh',
+          click: () => onLangChange('zh')
+        },
+        {
+          label: t.langEn,
+          type: 'radio',
+          checked: lang === 'en',
+          click: () => onLangChange('en')
+        }
+      ]
+    },
+    { type: 'separator' },
+    {
+      label: t.quit,
       click: () => {
-        // Force quit — bypass panel window close prevention
         panelWindow.destroy()
         const { app } = require('electron')
         app.quit()
       }
     }
   ])
-
   tray.setContextMenu(contextMenu)
+}
+
+export function createTray(
+  panelWindow: BrowserWindow,
+  lang: LangCode,
+  onLangChange: (lang: LangCode) => void
+): Tray {
+  const tray = new Tray(createTrayIcon())
+  tray.setToolTip('PokéRoam')
+
+  buildTrayMenu(tray, panelWindow, lang, onLangChange)
 
   // Left-click opens panel (Windows / Linux)
   tray.on('click', () => {

@@ -66,6 +66,7 @@ export interface ItemDefinition {
   name: string
   nameZh: string
   description: string
+  descriptionZh: string
   category: 'food' | 'equipment' | 'ball'
   holdable: boolean
 }

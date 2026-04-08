@@ -1,3 +1,4 @@
+import { useI18n } from '../../shared/i18n'
 import { WindowCurtain } from './WindowCurtain'
 import { DeskArea } from './DeskArea'
 import { ChairArea } from './ChairArea'
@@ -11,9 +12,19 @@ interface BedroomSceneProps {
 }
 
 export function BedroomScene({ onNavigate, hasDailyReward }: BedroomSceneProps): JSX.Element {
+  const { lang, t, setLang } = useI18n()
+
   return (
     <div className="bedroom">
-      <span className="bedroom-title">PokéRoam</span>
+      <span className="bedroom-title">{t.pokeroamTitle}</span>
+
+      {/* Language toggle */}
+      <button
+        className="lang-toggle"
+        onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')}
+      >
+        {lang === 'zh' ? 'EN' : '中'}
+      </button>
 
       {/* Window with curtains */}
       <WindowCurtain />

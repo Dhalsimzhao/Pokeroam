@@ -6,11 +6,13 @@ import { usePetPhysics } from './usePetPhysics'
 import { usePetDrag } from './usePetDrag'
 import { useIdleEvents } from './useIdleEvents'
 import { getSpriteConfig } from '../shared/sprite-config'
+import { useI18n } from '../shared/i18n'
 
 export default function App(): JSX.Element {
   const [speciesId, setSpeciesId] = useState<number | null>(null)
   const [idleOverride, setIdleOverride] = useState<PetAnimState | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const { t } = useI18n()
 
   // Pull initial state from main process on mount
   useEffect(() => {
@@ -101,7 +103,7 @@ export default function App(): JSX.Element {
             scale={2}
           />
         ) : (
-          <div style={{ color: '#888', fontSize: 11 }}>No sprite</div>
+          <div style={{ color: '#888', fontSize: 11 }}>{t.noSprite}</div>
         )}
       </div>
     </div>

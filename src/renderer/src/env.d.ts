@@ -37,6 +37,8 @@ interface ElectronAPI {
   isDailyRewardAvailable: () => Promise<boolean>
   showContextMenu: () => void
   openPanel: () => void
+  setLocale: (lang: string) => void
+  onLocaleChanged: (cb: (data: unknown) => void) => () => void
 }
 
 declare global {

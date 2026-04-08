@@ -62,5 +62,11 @@ contextBridge.exposeInMainWorld('api', {
   // Window management
   openPanel: (): void => {
     ipcRenderer.send('open-panel')
-  }
+  },
+
+  // Locale
+  setLocale: (lang: string): void => {
+    ipcRenderer.send('set-locale', lang)
+  },
+  onLocaleChanged: (cb: Callback) => onIpc('locale-changed', cb)
 })

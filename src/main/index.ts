@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain, Menu, screen, Tray } from 'electron'
 import { SaveManager } from './save-manager'
 import { createPetWindow } from './pet-window'
 import { createPanelWindow } from './panel-window'
-import { createTray } from './tray-manager'
+import { createTray, buildTrayMenu } from './tray-manager'
 import { GrowthManager } from './growth-manager'
 import { KeyboardMonitor } from './keyboard-monitor'
 import { FatigueDetector } from './fatigue-detector'
@@ -11,6 +11,7 @@ import type { SaveData } from '../shared/types'
 import { POKEMON_SPECIES, getSpeciesById, getExpForLevel } from '../shared/pokemon-data'
 import { getItemById, ITEMS } from '../shared/item-data'
 import { MAX_LEVEL } from '../shared/constants'
+import { getLocale, localeName, type LangCode } from '../shared/i18n'
 
 let petWindow: BrowserWindow | null = null
 let panelWindow: BrowserWindow | null = null
@@ -21,6 +22,18 @@ let keyboardMonitor: KeyboardMonitor
 let fatigueDetector: FatigueDetector
 let dailyRewardManager: DailyRewardManager
 let saveData: SaveData | null = null
+let currentLang: LangCode = 'zh'
+
+function handleLangChange(lang: LangCode): void {
+  currentLang = lang
+  // Rebuild tray menu
+  if (_tray && panelWindow) {
+    buildTrayMenu(_tray, panelWindow, currentLang, handleLangChange)
+  }
+  // Broadcast to all renderer windows so they sync
+  petWindow?.webContents.send('locale-changed', lang)
+  panelWindow?.webContents.send('locale-changed', lang)
+}
 
 // Hit regions for Windows click-through polling
 let hitRegions: Array<{ x: number; y: number; width: number; height: number }> = []
@@ -36,7 +49,7 @@ app.whenReady().then(() => {
 
   petWindow = createPetWindow()
   panelWindow = createPanelWindow()
-  _tray = createTray(panelWindow)
+  _tray = createTray(panelWindow, currentLang, handleLangChange)
   growthManager.setPetWindow(petWindow)
 
   // Always send pet state once pet window finishes loading
@@ -266,12 +279,20 @@ function setupIpcHandlers(): void {
     return dailyRewardManager.isAvailable(saveData)
   })
 
+  // Locale setting from renderer
+  ipcMain.on('set-locale', (_event, lang: string) => {
+    if (lang === 'zh' || lang === 'en') {
+      handleLangChange(lang)
+    }
+  })
+
   // Right-click context menu on pet
   ipcMain.on('show-context-menu', () => {
     if (!petWindow || !saveData?.activePokemonId) return
     const pokemon = saveData.pokemon.find((p) => p.id === saveData!.activePokemonId)
     if (!pokemon) return
     const species = getSpeciesById(pokemon.speciesId)
+    const t = getLocale(currentLang)
 
     // Food items in backpack
     const foodItems = saveData.backpack
@@ -282,27 +303,30 @@ function setupIpcHandlers(): void {
       .map((b) => {
         const item = getItemById(b.itemId)!
         return {
-          label: `${item.nameZh} ×${b.quantity}`,
+          label: `${localeName(item.nameZh, item.name, currentLang)} ×${b.quantity}`,
           click: (): void => {
-            // Use item via existing handler logic
             petWindow?.webContents.send('context-menu-feed', b.itemId)
           }
         }
       })
 
+    const speciesLabel = species
+      ? localeName(species.nameZh, species.name, currentLang)
+      : 'Pokemon'
+
     const template: Electron.MenuItemConstructorOptions[] = [
       {
-        label: `${species?.nameZh ?? 'Pokemon'} Lv.${pokemon.level}`,
+        label: `${speciesLabel} Lv.${pokemon.level}`,
         enabled: false
       },
       { type: 'separator' },
       {
-        label: 'Feed',
-        submenu: foodItems.length > 0 ? foodItems : [{ label: 'No food items', enabled: false }]
+        label: t.feed,
+        submenu: foodItems.length > 0 ? foodItems : [{ label: t.noFoodItems, enabled: false }]
       },
       { type: 'separator' },
       {
-        label: 'Open PokéRoam',
+        label: t.openPokeroam,
         click: (): void => {
           panelWindow?.show()
           panelWindow?.focus()

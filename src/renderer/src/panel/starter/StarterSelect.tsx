@@ -1,20 +1,23 @@
 import { useState } from 'react'
 import { STARTER_SPECIES } from '../../../../shared/constants'
 import { getSpeciesById } from '../../../../shared/pokemon-data'
+import { localeName } from '../../../../shared/i18n'
+import { useI18n } from '../../shared/i18n'
 import '../bedroom/styles.css'
 
 interface StarterSelectProps {
   onSelected: () => void
 }
 
-const STARTER_INFO = STARTER_SPECIES.map((id) => {
-  const species = getSpeciesById(id)!
-  return { id, name: species.name, nameZh: species.nameZh }
-})
-
 export function StarterSelect({ onSelected }: StarterSelectProps): JSX.Element {
   const [choosing, setChoosing] = useState<number | null>(null)
   const [revealed, setRevealed] = useState(false)
+  const { lang, t } = useI18n()
+
+  const starterInfo = STARTER_SPECIES.map((id) => {
+    const species = getSpeciesById(id)!
+    return { id, name: species.name, nameZh: species.nameZh }
+  })
 
   const handlePick = async (speciesId: number): Promise<void> => {
     if (choosing !== null) return
@@ -52,10 +55,10 @@ export function StarterSelect({ onSelected }: StarterSelectProps): JSX.Element {
         textShadow: '0 2px 8px rgba(0,0,0,0.5)'
       }}>
         <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700, fontFamily: "'Segoe UI', system-ui" }}>
-          Choose Your Partner!
+          {t.choosePartner}
         </h2>
         <p style={{ margin: '8px 0 0', fontSize: 14, opacity: 0.8, fontFamily: "'Segoe UI', system-ui" }}>
-          Click a Poké Ball to begin your journey
+          {t.starterHint}
         </p>
       </div>
 
@@ -69,7 +72,7 @@ export function StarterSelect({ onSelected }: StarterSelectProps): JSX.Element {
         gap: 80,
         zIndex: 20
       }}>
-        {STARTER_INFO.map((starter) => {
+        {starterInfo.map((starter) => {
           const isChosen = choosing === starter.id
           const isOther = choosing !== null && !isChosen
 
@@ -163,8 +166,8 @@ export function StarterSelect({ onSelected }: StarterSelectProps): JSX.Element {
                 textShadow: '0 1px 4px rgba(0,0,0,0.5)',
                 fontFamily: "'Segoe UI', system-ui"
               }}>
-                <div style={{ fontSize: 15, fontWeight: 600 }}>{starter.nameZh}</div>
-                <div style={{ fontSize: 12, opacity: 0.7 }}>{starter.name}</div>
+                <div style={{ fontSize: 15, fontWeight: 600 }}>{localeName(starter.nameZh, starter.name, lang)}</div>
+                <div style={{ fontSize: 12, opacity: 0.7 }}>{lang === 'zh' ? starter.name : starter.nameZh}</div>
               </div>
             </div>
           )
@@ -187,7 +190,10 @@ export function StarterSelect({ onSelected }: StarterSelectProps): JSX.Element {
           fontFamily: "'Segoe UI', system-ui",
           animation: 'fadeIn 0.5s ease-in'
         }}>
-          {getSpeciesById(choosing)?.nameZh} chose you!
+          {(() => {
+            const sp = getSpeciesById(choosing)
+            return sp ? localeName(sp.nameZh, sp.name, lang) : ''
+          })()} {t.choseYou}
         </div>
       )}
 

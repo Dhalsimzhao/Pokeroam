@@ -2,6 +2,8 @@ import { useState } from 'react'
 import type { SaveData, BackpackItem } from '../../../../shared/types'
 import { getItemById } from '../../../../shared/item-data'
 import { getSpeciesById } from '../../../../shared/pokemon-data'
+import { localeName, localeDescription } from '../../../../shared/i18n'
+import { useI18n } from '../../shared/i18n'
 
 interface BackpackProps {
   saveData: SaveData
@@ -11,6 +13,7 @@ interface BackpackProps {
 export function Backpack({ saveData, onBack }: BackpackProps): JSX.Element {
   const [selectedItem, setSelectedItem] = useState<string | null>(null)
   const [showPokemonPicker, setShowPokemonPicker] = useState(false)
+  const { lang, t } = useI18n()
 
   const selected = selectedItem ? getItemById(selectedItem) : null
   const selectedQuantity = saveData.backpack.find((b) => b.itemId === selectedItem)?.quantity ?? 0
@@ -38,10 +41,10 @@ export function Backpack({ saveData, onBack }: BackpackProps): JSX.Element {
         gap: 12,
         borderBottom: '2px solid #d4b896'
       }}>
-        <button onClick={onBack} style={btnStyle('#c0392b')}>Back</button>
-        <span style={{ fontSize: 16, fontWeight: 600, color: '#5d4e37' }}>Backpack</span>
+        <button onClick={onBack} style={btnStyle('#c0392b')}>{t.back}</button>
+        <span style={{ fontSize: 16, fontWeight: 600, color: '#5d4e37' }}>{t.backpack}</span>
         <span style={{ fontSize: 12, color: '#999', marginLeft: 'auto' }}>
-          {saveData.backpack.length} items
+          {saveData.backpack.length} {t.items}
         </span>
       </div>
 
@@ -58,7 +61,7 @@ export function Backpack({ saveData, onBack }: BackpackProps): JSX.Element {
         }}>
           {saveData.backpack.length === 0 ? (
             <div style={{ color: '#999', fontSize: 14, padding: 20 }}>
-              Backpack is empty
+              {t.backpackEmpty}
             </div>
           ) : (
             saveData.backpack.map((bi: BackpackItem) => {
@@ -86,7 +89,7 @@ export function Backpack({ saveData, onBack }: BackpackProps): JSX.Element {
                     {item.category === 'food' ? '🍬' : '💎'}
                   </div>
                   <div style={{ fontSize: 12, fontWeight: 600, color: '#5d4e37' }}>
-                    {item.nameZh}
+                    {localeName(item.nameZh, item.name, lang)}
                   </div>
                   <div style={{ fontSize: 11, color: '#888' }}>×{bi.quantity}</div>
                 </div>
@@ -106,19 +109,21 @@ export function Backpack({ saveData, onBack }: BackpackProps): JSX.Element {
             gap: 10
           }}>
             <div style={{ fontSize: 15, fontWeight: 600, color: '#5d4e37' }}>
-              {selected.nameZh}
+              {localeName(selected.nameZh, selected.name, lang)}
             </div>
-            <div style={{ fontSize: 11, color: '#888' }}>{selected.name}</div>
+            <div style={{ fontSize: 11, color: '#888' }}>
+              {lang === 'zh' ? selected.name : selected.nameZh}
+            </div>
             <div style={{ fontSize: 12, color: '#666', lineHeight: 1.4 }}>
-              {selected.description}
+              {localeDescription(selected.descriptionZh, selected.description, lang)}
             </div>
-            <div style={{ fontSize: 11, color: '#999' }}>Quantity: {selectedQuantity}</div>
+            <div style={{ fontSize: 11, color: '#999' }}>{t.quantity}{selectedQuantity}</div>
 
             <button
               onClick={() => setShowPokemonPicker(!showPokemonPicker)}
               style={btnStyle('#27ae60')}
             >
-              {selected.holdable ? 'Give to...' : 'Use on...'}
+              {selected.holdable ? t.giveTo : t.useOn}
             </button>
 
             {showPokemonPicker && (
@@ -145,7 +150,7 @@ export function Backpack({ saveData, onBack }: BackpackProps): JSX.Element {
                         textAlign: 'left'
                       }}
                     >
-                      {sp?.nameZh ?? `#${p.speciesId}`} Lv.{p.level}
+                      {sp ? localeName(sp.nameZh, sp.name, lang) : `#${p.speciesId}`} {t.lv}{p.level}
                     </button>
                   )
                 })}

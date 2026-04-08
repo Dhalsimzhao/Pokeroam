@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { POKEMON_SPECIES } from '../../../../shared/pokemon-data'
 import { getEvolutionChain, getSpeciesById } from '../../../../shared/pokemon-data'
 import type { PokemonSpecies } from '../../../../shared/types'
+import { localeName } from '../../../../shared/i18n'
+import { useI18n } from '../../shared/i18n'
 
 interface PokedexProps {
   unlockedIds: number[]
@@ -10,6 +12,7 @@ interface PokedexProps {
 
 export function Pokedex({ unlockedIds, onBack }: PokedexProps): JSX.Element {
   const [selectedId, setSelectedId] = useState<number | null>(null)
+  const { lang, t } = useI18n()
 
   const isUnlocked = (id: number): boolean => unlockedIds.includes(id)
   const selected = selectedId ? getSpeciesById(selectedId) : null
@@ -32,20 +35,21 @@ export function Pokedex({ unlockedIds, onBack }: PokedexProps): JSX.Element {
         borderBottom: '2px solid #d4b896'
       }}>
         <button onClick={selectedId ? () => setSelectedId(null) : onBack} style={btnStyle('#c0392b')}>
-          {selectedId ? 'List' : 'Back'}
+          {selectedId ? t.list : t.back}
         </button>
-        <span style={{ fontSize: 16, fontWeight: 600, color: '#5d4e37' }}>Pokedex</span>
+        <span style={{ fontSize: 16, fontWeight: 600, color: '#5d4e37' }}>{t.pokedex}</span>
         <span style={{ fontSize: 12, color: '#999', marginLeft: 'auto' }}>
-          {unlockedIds.length}/{POKEMON_SPECIES.length} discovered
+          {unlockedIds.length}/{POKEMON_SPECIES.length} {t.discovered}
         </span>
       </div>
 
       {selected ? (
-        <DetailView species={selected} unlockedIds={unlockedIds} />
+        <DetailView species={selected} unlockedIds={unlockedIds} lang={lang} t={t} />
       ) : (
         <GridView
           unlockedIds={unlockedIds}
           onSelect={(id) => isUnlocked(id) && setSelectedId(id)}
+          lang={lang}
         />
       )}
     </div>
@@ -54,10 +58,12 @@ export function Pokedex({ unlockedIds, onBack }: PokedexProps): JSX.Element {
 
 function GridView({
   unlockedIds,
-  onSelect
+  onSelect,
+  lang
 }: {
   unlockedIds: number[]
   onSelect: (id: number) => void
+  lang: 'zh' | 'en'
 }): JSX.Element {
   return (
     <div style={{
@@ -96,7 +102,7 @@ function GridView({
             </div>
             <div style={{ fontSize: 10, color: '#999' }}>#{String(sp.id).padStart(3, '0')}</div>
             <div style={{ fontSize: 11, fontWeight: 600, color: '#5d4e37' }}>
-              {unlocked ? sp.nameZh : '???'}
+              {unlocked ? localeName(sp.nameZh, sp.name, lang) : '???'}
             </div>
           </div>
         )
@@ -107,10 +113,14 @@ function GridView({
 
 function DetailView({
   species,
-  unlockedIds
+  unlockedIds,
+  lang,
+  t
 }: {
   species: PokemonSpecies
   unlockedIds: number[]
+  lang: 'zh' | 'en'
+  t: { evolutionChain: string; lv: string }
 }): JSX.Element {
   const chain = getEvolutionChain(species.id)
 
@@ -132,20 +142,22 @@ function DetailView({
           🐾
         </div>
         <div>
-          <h2 style={{ margin: 0, color: '#5d4e37' }}>{species.nameZh}</h2>
-          <div style={{ color: '#888', marginBottom: 8 }}>{species.name} · #{String(species.id).padStart(3, '0')}</div>
+          <h2 style={{ margin: 0, color: '#5d4e37' }}>{localeName(species.nameZh, species.name, lang)}</h2>
+          <div style={{ color: '#888', marginBottom: 8 }}>
+            {lang === 'zh' ? species.name : species.nameZh} · #{String(species.id).padStart(3, '0')}
+          </div>
           <div style={{ display: 'flex', gap: 6 }}>
-            {species.types.map((t) => (
-              <span key={t} style={{
+            {species.types.map((tp) => (
+              <span key={tp} style={{
                 padding: '2px 10px',
-                background: typeColor(t),
+                background: typeColor(tp),
                 color: '#fff',
                 borderRadius: 10,
                 fontSize: 11,
                 fontWeight: 600,
                 textTransform: 'capitalize'
               }}>
-                {t}
+                {tp}
               </span>
             ))}
           </div>
@@ -155,7 +167,7 @@ function DetailView({
       {/* Evolution chain */}
       <div style={{ marginTop: 16 }}>
         <div style={{ fontSize: 14, fontWeight: 600, color: '#5d4e37', marginBottom: 12 }}>
-          Evolution Chain
+          {t.evolutionChain}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           {chain.map((id, i) => {
@@ -167,7 +179,7 @@ function DetailView({
               <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 {i > 0 && (
                   <div style={{ color: '#999', fontSize: 12 }}>
-                    → {sp.evolutionLevel ? `Lv.${sp.evolutionLevel}` : sp.evolutionItem ?? ''}
+                    → {sp.evolutionLevel ? `${t.lv}${sp.evolutionLevel}` : sp.evolutionItem ?? ''}
                   </div>
                 )}
                 <div style={{
@@ -185,7 +197,7 @@ function DetailView({
                     🐾
                   </div>
                   <div style={{ fontSize: 10, color: '#5d4e37' }}>
-                    {unlocked ? sp.nameZh : '???'}
+                    {unlocked ? localeName(sp.nameZh, sp.name, lang) : '???'}
                   </div>
                 </div>
               </div>

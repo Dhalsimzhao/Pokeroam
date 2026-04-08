@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { SaveData } from '../../../shared/types'
+import { useI18n } from '../shared/i18n'
 import { BedroomScene, type PanelView } from './bedroom/BedroomScene'
 import { StarterSelect } from './starter/StarterSelect'
 import { PokemonPC } from './panels/PokemonPC'
@@ -12,6 +13,7 @@ export default function App(): JSX.Element {
   const [view, setView] = useState<PanelView>('bedroom')
   const [loaded, setLoaded] = useState(false)
   const [hasDailyReward, setHasDailyReward] = useState(false)
+  const { t } = useI18n()
 
   // Load initial save data
   useEffect(() => {
@@ -59,14 +61,14 @@ export default function App(): JSX.Element {
         <button onClick={goBack} style={{
           border: 'none', background: '#c0392b', color: '#fff',
           padding: '6px 14px', borderRadius: 4, cursor: 'pointer', fontSize: 13, fontWeight: 600
-        }}>Back</button>
+        }}>{t.back}</button>
         <span style={{ fontSize: 16, fontWeight: 600, color: '#5d4e37' }}>{title}</span>
       </div>
       <div style={{
         flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
         color: '#999', fontSize: 14
       }}>
-        Coming soon...
+        {t.comingSoon}
       </div>
     </div>
   )
@@ -84,15 +86,15 @@ export default function App(): JSX.Element {
     case 'pc':
       return saveData
         ? <PokemonPC saveData={saveData} onBack={goBack} />
-        : renderPlaceholder('Pokemon PC')
+        : renderPlaceholder(t.pokemonPC)
     case 'pokedex':
       return saveData
         ? <Pokedex unlockedIds={saveData.pokedex} onBack={goBack} />
-        : renderPlaceholder('Pokedex')
+        : renderPlaceholder(t.pokedex)
     case 'backpack':
       return saveData
         ? <Backpack saveData={saveData} onBack={goBack} />
-        : renderPlaceholder('Backpack')
+        : renderPlaceholder(t.backpack)
     case 'daily-reward':
       return <DailyReward onBack={goBack} />
     default:

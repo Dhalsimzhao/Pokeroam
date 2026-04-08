@@ -2,6 +2,8 @@ import { useState } from 'react'
 import type { DailyReward as DailyRewardType } from '../../../../shared/types'
 import { getSpeciesById } from '../../../../shared/pokemon-data'
 import { getItemById } from '../../../../shared/item-data'
+import { localeName } from '../../../../shared/i18n'
+import { useI18n } from '../../shared/i18n'
 
 interface DailyRewardProps {
   onBack: () => void
@@ -11,6 +13,7 @@ export function DailyReward({ onBack }: DailyRewardProps): JSX.Element {
   const [reward, setReward] = useState<DailyRewardType | null>(null)
   const [claimed, setClaimed] = useState(false)
   const [revealing, setRevealing] = useState(false)
+  const { lang, t } = useI18n()
 
   const handleOpen = async (): Promise<void> => {
     setRevealing(true)
@@ -41,8 +44,8 @@ export function DailyReward({ onBack }: DailyRewardProps): JSX.Element {
         <button onClick={onBack} style={{
           border: 'none', background: '#c0392b', color: '#fff',
           padding: '6px 14px', borderRadius: 4, cursor: 'pointer', fontSize: 13, fontWeight: 600
-        }}>Back</button>
-        <span style={{ fontSize: 16, fontWeight: 600, color: '#5d4e37' }}>Daily Reward</span>
+        }}>{t.back}</button>
+        <span style={{ fontSize: 16, fontWeight: 600, color: '#5d4e37' }}>{t.dailyReward}</span>
       </div>
 
       <div style={{
@@ -84,7 +87,7 @@ export function DailyReward({ onBack }: DailyRewardProps): JSX.Element {
               }} />
             </div>
             <div style={{ color: '#5d4e37', fontSize: 16, fontWeight: 600 }}>
-              Click to open!
+              {t.clickToOpen}
             </div>
           </>
         )}
@@ -106,17 +109,23 @@ export function DailyReward({ onBack }: DailyRewardProps): JSX.Element {
               <>
                 <div style={{ fontSize: 64, marginBottom: 12 }}>🐾</div>
                 <div style={{ fontSize: 20, fontWeight: 700, color: '#5d4e37' }}>
-                  {getSpeciesById(reward.pokemonSpeciesId)?.nameZh ?? 'Pokemon'}!
+                  {(() => {
+                    const sp = getSpeciesById(reward.pokemonSpeciesId)
+                    return sp ? localeName(sp.nameZh, sp.name, lang) : 'Pokemon'
+                  })()}!
                 </div>
                 <div style={{ fontSize: 14, color: '#888', marginTop: 4 }}>
-                  {getSpeciesById(reward.pokemonSpeciesId)?.name} joined your team!
+                  {(() => {
+                    const sp = getSpeciesById(reward.pokemonSpeciesId)
+                    return sp ? (lang === 'zh' ? sp.name : sp.nameZh) : ''
+                  })()} {t.joinedTeam}
                 </div>
               </>
             ) : reward.items ? (
               <>
                 <div style={{ fontSize: 40, marginBottom: 12 }}>🎁</div>
                 <div style={{ fontSize: 18, fontWeight: 600, color: '#5d4e37', marginBottom: 12 }}>
-                  Items received!
+                  {t.itemsReceived}
                 </div>
                 <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
                   {reward.items.map((ri) => {
@@ -129,7 +138,7 @@ export function DailyReward({ onBack }: DailyRewardProps): JSX.Element {
                         border: '1px solid #d4b896'
                       }}>
                         <div style={{ fontSize: 13, fontWeight: 600, color: '#5d4e37' }}>
-                          {item?.nameZh ?? ri.itemId}
+                          {item ? localeName(item.nameZh, item.name, lang) : ri.itemId}
                         </div>
                         <div style={{ fontSize: 11, color: '#888' }}>×{ri.quantity}</div>
                       </div>
@@ -138,7 +147,7 @@ export function DailyReward({ onBack }: DailyRewardProps): JSX.Element {
                 </div>
               </>
             ) : (
-              <div style={{ color: '#999' }}>No reward available today</div>
+              <div style={{ color: '#999' }}>{t.noRewardToday}</div>
             )}
 
             <button
@@ -155,14 +164,14 @@ export function DailyReward({ onBack }: DailyRewardProps): JSX.Element {
                 fontWeight: 600
               }}
             >
-              Nice!
+              {t.nice}
             </button>
           </div>
         )}
 
         {!reward && !revealing && (
           <div style={{ color: '#999', fontSize: 12 }}>
-            New rewards available daily after 8 AM
+            {t.rewardHint}
           </div>
         )}
       </div>

@@ -1,3 +1,5 @@
+import { useI18n } from '../../shared/i18n'
+
 interface DeskAreaProps {
   onClickComputer: () => void
   onClickPokedex: () => void
@@ -11,21 +13,23 @@ export function DeskArea({
   onClickPokeball,
   hasDailyReward
 }: DeskAreaProps): JSX.Element {
+  const { t } = useI18n()
+
   return (
     <div className="desk">
       <div className="desk-objects">
         {/* Computer / PC */}
         <div className="desk-object computer" onClick={onClickComputer}>
           <div className="monitor">
-            <div className="monitor-screen">PC</div>
+            <div className="monitor-screen">{t.pc}</div>
           </div>
           <div className="monitor-stand" />
-          <span className="desk-object-label">Pokemon PC</span>
+          <span className="desk-object-label">{t.pokemonPC}</span>
         </div>
 
         {/* Pokédex */}
         <div className="desk-object pokedex-book" onClick={onClickPokedex}>
-          <span className="desk-object-label">Pokedex</span>
+          <span className="desk-object-label">{t.pokedex}</span>
         </div>
 
         {/* Poké Ball (daily reward) */}
@@ -37,7 +41,7 @@ export function DeskArea({
           <div className="pokeball-bottom" />
           <div className="pokeball-line" />
           <div className="pokeball-center" />
-          <span className="desk-object-label">Daily Reward</span>
+          <span className="desk-object-label">{t.dailyReward}</span>
         </div>
       </div>
 

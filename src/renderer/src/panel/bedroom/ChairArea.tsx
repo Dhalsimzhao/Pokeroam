@@ -1,8 +1,12 @@
+import { useI18n } from '../../shared/i18n'
+
 interface ChairAreaProps {
   onClickBackpack: () => void
 }
 
 export function ChairArea({ onClickBackpack }: ChairAreaProps): JSX.Element {
+  const { t } = useI18n()
+
   return (
     <div className="chair-area">
       <div className="chair">
@@ -17,7 +21,7 @@ export function ChairArea({ onClickBackpack }: ChairAreaProps): JSX.Element {
         <div className="backpack" onClick={onClickBackpack}>
           <div className="backpack-flap" />
           <div className="backpack-buckle" />
-          <span className="backpack-label">Backpack</span>
+          <span className="backpack-label">{t.backpack}</span>
         </div>
       </div>
     </div>

@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import type { SaveData, BackpackItem } from '../../../../shared/types'
 import { getItemById } from '../../../../shared/item-data'
+import { localeName } from '../../../../shared/i18n'
+import { useI18n } from '../../shared/i18n'
 import { PokemonCard } from './PokemonCard'
 
 interface PokemonPCProps {
@@ -11,6 +13,7 @@ interface PokemonPCProps {
 export function PokemonPC({ saveData, onBack }: PokemonPCProps): JSX.Element {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [showItemPicker, setShowItemPicker] = useState(false)
+  const { lang, t } = useI18n()
 
   const selected = saveData.pokemon.find((p) => p.id === selectedId)
   const isActive = selectedId === saveData.activePokemonId
@@ -57,10 +60,10 @@ export function PokemonPC({ saveData, onBack }: PokemonPCProps): JSX.Element {
         gap: 12,
         borderBottom: '2px solid #d4b896'
       }}>
-        <button onClick={onBack} style={btnStyle('#c0392b')}>Back</button>
-        <span style={{ fontSize: 16, fontWeight: 600, color: '#5d4e37' }}>Pokemon PC</span>
+        <button onClick={onBack} style={btnStyle('#c0392b')}>{t.back}</button>
+        <span style={{ fontSize: 16, fontWeight: 600, color: '#5d4e37' }}>{t.pokemonPC}</span>
         <span style={{ fontSize: 12, color: '#999', marginLeft: 'auto' }}>
-          {saveData.pokemon.length} Pokemon
+          {t.pokemonCount.replace('{count}', String(saveData.pokemon.length))}
         </span>
       </div>
 
@@ -97,22 +100,22 @@ export function PokemonPC({ saveData, onBack }: PokemonPCProps): JSX.Element {
             gap: 8
           }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: '#5d4e37', marginBottom: 8 }}>
-              Actions
+              {t.actions}
             </div>
 
             {isActive ? (
               <button onClick={handleRecall} style={btnStyle('#3498db')}>
-                Recall (收回)
+                {t.recall}
               </button>
             ) : (
               <button onClick={handleRelease} style={btnStyle('#27ae60')}>
-                Release (放出)
+                {t.release}
               </button>
             )}
 
             {selected.heldItemId ? (
               <button onClick={handleUnequip} style={btnStyle('#e67e22')}>
-                Unequip (取出道具)
+                {t.unequip}
               </button>
             ) : (
               <button
@@ -120,7 +123,7 @@ export function PokemonPC({ saveData, onBack }: PokemonPCProps): JSX.Element {
                 style={btnStyle('#8e44ad')}
                 disabled={holdableItems.length === 0}
               >
-                Equip (装备道具)
+                {t.equip}
               </button>
             )}
 
@@ -146,7 +149,7 @@ export function PokemonPC({ saveData, onBack }: PokemonPCProps): JSX.Element {
                         padding: '4px 8px'
                       }}
                     >
-                      {item.nameZh} ×{bi.quantity}
+                      {localeName(item.nameZh, item.name, lang)} ×{bi.quantity}
                     </button>
                   )
                 })}
