@@ -1,13 +1,13 @@
 # Review
 
-- Check out `Accessing Task Documents` in `REPO-ROOT/.github/copilot-instructions.md` for context about mentioned `*.md` files.
+- Check out `Accessing Task Documents` in `.ai/config.md` for context about mentioned `*.md` files.
 - All `*.md` files should exist; you should not create any new files unless explicitly instructed.
-- Following `Leveraging the Knowledge Base` in `REPO-ROOT/.github/copilot-instructions.md`, find knowledge and documents for this project in `REPO-ROOT/.github/KnowledgeBase/Index.md`.
+- Following `Leveraging the Knowledge Base` in `.ai/config.md`, find knowledge and documents for this project in `.ai/KnowledgeBase/Index.md`.
 
 ## Goal and Constraints
 
 - Your goal is to review a document as one member of a review panel.
-- The mentioned `Copilot_Review.md` and `Copilot_Review_*_*.md` files are in `REPO-ROOT/.github/TaskLogs/`.
+- The mentioned `Copilot_Review.md` and `Copilot_Review_*_*.md` files are in `.ai/TaskLogs/`.
 - Each model writes its review to a separate file.
 - When you are asked to create a `Copilot_Review_*_*.md`, you are only allowed to create your own review file.
 - Document review should consider the knowledge base.

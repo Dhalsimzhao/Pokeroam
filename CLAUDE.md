@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-- Read `.github/copilot-instructions.md` before starting any work. It contains project architecture, commands, coding conventions, tool configurations, and knowledge base access.
+- Read `.ai/config.md` before starting any work. It contains project architecture, commands, coding conventions, tool configurations, and knowledge base access.
 - If any `*.prompt.md` file is referenced, take immediate action following the instructions in that file.
 
 ## AI-Assisted Development Workflow
@@ -11,16 +11,16 @@ Check the **first word** of my request to determine which prompt file to follow.
 
 | English | 中文 | Prompt file | Purpose |
 |---------|------|-------------|---------|
-| `scrum` | `拆解` | `.github/prompts/0-scrum.prompt.md` | Break down a problem into tasks |
-| `design` | `设计` | `.github/prompts/1-design.prompt.md` | Architecture-level design |
-| `plan` | `规划` | `.github/prompts/2-planning.prompt.md` | Detailed implementation planning |
-| `summarize` | `摘要` | `.github/prompts/3-summarizing.prompt.md` | Create execution summary |
-| `execute` | `执行` | `.github/prompts/4-execution.prompt.md` | Apply code changes |
-| `verify` | `验证` | `.github/prompts/5-verifying.prompt.md` | Build & test verification |
-| `review` | `评审` | `.github/prompts/review.prompt.md` | Multi-model review board |
-| `refine` | `提炼` | `.github/prompts/refine.prompt.md` | Extract learnings from completed tasks |
-| `kb` | `知识库` | `.github/prompts/kb.prompt.md` | Knowledge base management |
-| `investigate` | `排查` | `.github/prompts/investigate.prompt.md` | Bug investigation |
+| `scrum` | `拆解` | `.ai/prompts/0-scrum.prompt.md` | Break down a problem into tasks |
+| `design` | `设计` | `.ai/prompts/1-design.prompt.md` | Architecture-level design |
+| `plan` | `规划` | `.ai/prompts/2-planning.prompt.md` | Detailed implementation planning |
+| `summarize` | `摘要` | `.ai/prompts/3-summarizing.prompt.md` | Create execution summary |
+| `execute` | `执行` | `.ai/prompts/4-execution.prompt.md` | Apply code changes |
+| `verify` | `验证` | `.ai/prompts/5-verifying.prompt.md` | Build & test verification |
+| `review` | `评审` | `.ai/prompts/review.prompt.md` | Multi-model review board |
+| `refine` | `提炼` | `.ai/prompts/refine.prompt.md` | Extract learnings from completed tasks |
+| `kb` | `知识库` | `.ai/prompts/kb.prompt.md` | Knowledge base management |
+| `investigate` | `排查` | `.ai/prompts/investigate.prompt.md` | Bug investigation |
 
 If the first word is not recognized, treat it as a normal conversation — no prompt file needed.
 
@@ -63,6 +63,21 @@ The **second word** becomes a markdown header (`# Word`) passed to the prompt fi
 
 If the first word is not in this table, treat it as a normal conversation.
 
-### Step 3. Execute
+### Step 3. Resolve File References
+
+If the request contains a file path (e.g., `@docs/plans/feature.md` or just `docs/plans/feature.md`), read that file and use its content as the problem/update description. The `@` prefix is optional.
+
+Examples:
+- `scrum problem @docs/plans/evolution-animation.md` → read the file, treat its content as the `# Problem` description
+- `拆解 新 docs/plans/evolution-animation.md` → same effect
+- `scrum problem 我想添加进化动画` → inline text, no file to read
+
+When a file is referenced:
+1. Read the file content
+2. Use the full file content as the body after the transformed header (`# Problem`, `# Update`, etc.)
+
+When no file is referenced, use the remaining text after the second word as the description body.
+
+### Step 4. Execute
 
 Read the referenced prompt file, pass the transformed request, and begin work immediately.

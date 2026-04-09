@@ -8,8 +8,8 @@
 set -e
 
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-TASK_DIR="$REPO_ROOT/.github/TaskLogs"
-LEARNING_DIR="$REPO_ROOT/.github/Learning"
+TASK_DIR="$REPO_ROOT/.ai/TaskLogs"
+LEARNING_DIR="$REPO_ROOT/.ai/Learning"
 
 TASK_FILES=(
   "Copilot_Scrum.md"

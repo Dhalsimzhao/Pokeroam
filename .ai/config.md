@@ -1,11 +1,13 @@
-# Copilot Instructions — PokéRoam
+# Project Config — PokéRoam
+
+> All paths in this file are relative to the repository root.
 
 ## Project Overview
 
 PokéRoam is an Electron desktop pet app with two BrowserWindows (pet overlay + panel UI), built with TypeScript, electron-vite, and React.
 
-Full game design: `REPO-ROOT/docs/plans/2026-04-03-pokeroam-design.md`
-Implementation plan: `REPO-ROOT/docs/plans/2026-04-03-pokeroam-implementation.md`
+Full game design: `docs/plans/2026-04-03-pokeroam-design.md`
+Implementation plan: `docs/plans/2026-04-03-pokeroam-implementation.md`
 
 ## Architecture
 
@@ -71,7 +73,7 @@ No test framework is configured. Validate changes with `pnpm typecheck`.
 
 ## Accessing Task Documents
 
-Task documents live in `REPO-ROOT/.github/TaskLogs/`:
+Task documents live in `.ai/TaskLogs/`:
 
 | File | Purpose |
 |------|---------|
@@ -88,13 +90,13 @@ These are working documents managed by the workflow. Do NOT create them manually
 
 ## Accessing Script Files
 
-Helper scripts in `REPO-ROOT/.github/scripts/`:
+Helper scripts in `.ai/scripts/`:
 
-- `copilot-prepare.sh` — Prepare, backup, and clean up task documents
+- `prepare.sh` — Prepare, backup, and clean up task documents
   - No args: Clear all task documents for a fresh start
-  - `--backup`: Archive current task documents to a timestamped backup folder in `REPO-ROOT/.github/Learning/`
+  - `--backup`: Archive current task documents to a timestamped backup folder in `.ai/Learning/`
   - `--earliest`: Print the path to the earliest unprocessed backup folder
-- `copilot-prepare-review.sh` — Manage review board files
+- `prepare-review.sh` — Manage review board files
   - Renames `Copilot_Review_Writing_*.md` → `Copilot_Review_Finished_*.md`
   - Deletes old `Copilot_Review_Finished_*.md` before renaming
 
@@ -137,7 +139,7 @@ Helper scripts in `REPO-ROOT/.github/scripts/`:
 
 ## Leveraging the Knowledge Base
 
-The knowledge base index is at `REPO-ROOT/.github/KnowledgeBase/Index.md`.
+The knowledge base index is at `.ai/KnowledgeBase/Index.md`.
 
 Organized by component. Each entry has:
 - A descriptive title with bullet points covering key design decisions

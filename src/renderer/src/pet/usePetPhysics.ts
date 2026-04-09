@@ -86,6 +86,13 @@ export function usePetPhysics(): PhysicsAPI {
       const s = stateRef.current
       frameCount++
 
+      // Refresh workArea every ~2 seconds to handle display changes
+      if (frameCount % 120 === 0) {
+        window.api.getWorkArea().then((freshWa) => {
+          workAreaRef.current = freshWa
+        })
+      }
+
       if (s.grounded) {
         if (frameCount >= nextActionRef.current) {
           pickNextAction()

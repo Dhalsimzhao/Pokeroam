@@ -69,6 +69,7 @@ app.whenReady().then(() => {
 
   setupIpcHandlers()
   startClickThroughPolling()
+  startBoundsCheck()
   startIdleXpTick()
   startKeyboardMonitoring()
 })
@@ -350,7 +351,11 @@ function setupIpcHandlers(): void {
   })
 
   ipcMain.on('set-pet-position', (_e, x: number, y: number) => {
-    petWindow?.setPosition(Math.round(x), Math.round(y))
+    if (!petWindow) return
+    const { workArea } = screen.getPrimaryDisplay()
+    const clampedX = Math.max(workArea.x, Math.min(Math.round(x), workArea.x + workArea.width - 128))
+    const clampedY = Math.max(workArea.y, Math.min(Math.round(y), workArea.y + workArea.height - 128))
+    petWindow.setPosition(clampedX, clampedY)
   })
 
   // Click-through control
@@ -391,6 +396,22 @@ function startClickThroughPolling(): void {
       petWindow.setIgnoreMouseEvents(!inside, { forward: true })
     }
   }, 16)
+}
+
+// Periodic bounds safety net — pull pet back if it's off-screen
+function startBoundsCheck(): void {
+  setInterval(() => {
+    if (!petWindow) return
+    const [x, y] = petWindow.getPosition()
+    const { workArea } = screen.getPrimaryDisplay()
+    const maxX = workArea.x + workArea.width - 128
+    const maxY = workArea.y + workArea.height - 128
+    if (x < workArea.x || x > maxX || y < workArea.y || y > maxY) {
+      const newX = Math.max(workArea.x, Math.min(x, maxX))
+      const newY = Math.max(workArea.y, Math.min(y, maxY))
+      petWindow.setPosition(newX, newY)
+    }
+  }, 5000)
 }
 
 // Idle XP tick — every 60 seconds

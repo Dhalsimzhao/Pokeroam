@@ -5,7 +5,7 @@
 set -e
 
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-TASK_DIR="$REPO_ROOT/.github/TaskLogs"
+TASK_DIR="$REPO_ROOT/.ai/TaskLogs"
 
 # Delete old Finished files
 for f in "$TASK_DIR"/Copilot_Review_Finished_*.md; do

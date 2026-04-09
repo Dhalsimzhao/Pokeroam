@@ -1,13 +1,13 @@
 # Refine
 
-- Check out `Accessing Script Files` in `REPO-ROOT/.github/copilot-instructions.md` for context about mentioned `*.sh` files.
+- Check out `Accessing Script Files` in `.ai/config.md` for context about mentioned `*.sh` files.
 - All `*.md` and `*.sh` files should exist; you should not create any new files unless explicitly instructed.
-- Following `Leveraging the Knowledge Base` in `REPO-ROOT/.github/copilot-instructions.md`, find knowledge and documents for this project in `REPO-ROOT/.github/KnowledgeBase/Index.md`.
+- Following `Leveraging the Knowledge Base` in `.ai/config.md`, find knowledge and documents for this project in `.ai/KnowledgeBase/Index.md`.
 
 ## Goal and Constraints
 
 - Your goal is to extract learnings from completed task logs and write them to learning files.
-- The `KnowledgeBase` and `Learning` folders are in `REPO-ROOT/.github/`.
+- The `KnowledgeBase` and `Learning` folders are in `.ai/`.
 - You are not allowed to modify any source code.
 - Write learnings to these files, including not only best practices but the user's preferences:
   - `KnowledgeBase/Learning.md`: Learnings that apply across projects (general best practices).
