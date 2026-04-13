@@ -2,19 +2,19 @@
 
 - Check out `Accessing Task Documents` and `Accessing Script Files` in `.ai/config.md` for context about mentioned `*.md` and `*.sh` files.
 - All `*.md` and `*.sh` files should exist; you should not create any new files unless explicitly instructed.
-  - The `Copilot_Task.md` file should already exist.
+  - The `Task.md` file should already exist.
   - If you cannot find the file, you are looking at a wrong folder.
 - Following `Leveraging the Knowledge Base` in `.ai/config.md`, find knowledge and documents for this project in `.ai/KnowledgeBase/Index.md`.
 
 ## Goal and Constraints
 
-- Your goal is to create an architecture-level design in `Copilot_Task.md` — not implementation details.
-- You are only allowed to update `Copilot_Task.md`.
+- Your goal is to create an architecture-level design in `Task.md` — not implementation details.
+- You are only allowed to update `Task.md`.
 - You are not allowed to modify any other files.
 - The phrasing of the request may look like asking for code change, but your actual work is to write the design document.
 - The design should explain **what** changes and **why**, with supporting evidence from code or the knowledge base.
 
-## Copilot_Task.md Structure
+## Task.md Structure
 
 - `# !!!TASK!!!`: This file always begins with this title.
 - `# PROBLEM DESCRIPTION`: An exact copy of the problem description.
@@ -34,10 +34,10 @@
 
 Ignore this section if there is no "# Problem" in the LATEST chat message.
 
-- Find and execute `copilot-prepare.sh` to create a fresh `Copilot_Task.md`.
+- Find and execute `prepare.sh` to create a fresh `Task.md`.
 - Copy precisely my problem description from the LATEST chat message under `# PROBLEM DESCRIPTION`.
 - Add an empty `# UPDATES` section.
-- Mark the corresponding task in `Copilot_Scrum.md` as taken with `[x]`.
+- Mark the corresponding task in `Scrum.md` as taken with `[x]`.
 
 ### Update current Document (only when "# Update" appears in the LATEST chat message)
 
@@ -64,4 +64,4 @@ Ignore this section if there is no "# Update" in the LATEST chat message.
 
 ## Step 4. Mark the Completion
 
-- Ensure there is a `# !!!FINISHED!!!` mark at the end of `Copilot_Task.md`.
+- Ensure there is a `# !!!FINISHED!!!` mark at the end of `Task.md`.

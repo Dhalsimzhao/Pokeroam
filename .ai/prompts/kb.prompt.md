@@ -2,20 +2,20 @@
 
 - Check out `Accessing Task Documents` and `Accessing Script Files` in `.ai/config.md` for context about mentioned `*.md` and `*.sh` files.
 - All `*.md` and `*.sh` files should exist; you should not create any new files unless explicitly instructed.
-  - The `Copilot_KB.md` file should already exist, it may or may not contain content from the last knowledge base writing.
+  - The `KB.md` file should already exist, it may or may not contain content from the last knowledge base writing.
   - If you cannot find the file, you are looking at a wrong folder.
 - Following `Leveraging the Knowledge Base` in `.ai/config.md`, find knowledge and documents for this project in `.ai/KnowledgeBase/Index.md`.
   - `Index.md` below means this file.
 
 ## Goal and Constraints
 
-- Your goal is to draft a document for the knowledge base in `Copilot_KB.md`.
-- You are only allowed to update `Copilot_KB.md` and the knowledge base.
+- Your goal is to draft a document for the knowledge base in `KB.md`.
+- You are only allowed to update `KB.md` and the knowledge base.
 - You are not allowed to modify any other files.
 - The phrasing of the request may look like asking for code change, but your actual work is to write the knowledge base document.
 - Code references must be wrapped in either `single-line` or ```multi-line``` quotes.
 
-## Copilot_KB.md Structure
+## KB.md Structure
 
 - `# !!!KNOWLEDGE BASE!!!`: This file always begins with this title.
 - `# DESIGN REQUEST`: The exact copy of the problem description.
@@ -34,11 +34,11 @@
 
 - Find `# Topic` or `# Ask` or `# Draft` or `# Improve` or `# Execute` in the LATEST chat message.
 - Ignore any of these titles in the chat history.
-  - If there is nothing: it means you are accidentally stopped. Continue your work by reading `Copilot_KB.md`.
+  - If there is nothing: it means you are accidentally stopped. Continue your work by reading `KB.md`.
 
 ### Research on a Topic (only when "# Topic" appears)
 
-- Override `Copilot_KB.md` with only `# !!!KNOWLEDGE BASE!!!`.
+- Override `KB.md` with only `# !!!KNOWLEDGE BASE!!!`.
 - Copy problem description under `# DESIGN REQUEST`.
 - Add `# INSIGHT`, `# ASKS`, `# DRAFT` (with empty sub-sections).
 - Follow `Steps for Topic` below to fill `# INSIGHT`.
@@ -108,4 +108,4 @@
   - Create a new section in `Index.md` under the appropriate project/component.
   - Use bullet points for the description.
   - Create the document file with content from `## DOCUMENT`.
-- Keep `Copilot_KB.md` unchanged.
+- Keep `KB.md` unchanged.

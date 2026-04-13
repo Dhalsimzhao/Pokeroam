@@ -23,16 +23,28 @@ let fatigueDetector: FatigueDetector
 let dailyRewardManager: DailyRewardManager
 let saveData: SaveData | null = null
 let currentLang: LangCode = 'zh'
+let debugEnabled = false
+
+function rebuildTray(): void {
+  if (_tray && panelWindow) {
+    buildTrayMenu(_tray, panelWindow, currentLang, handleLangChange, {
+      debugEnabled,
+      onDebugToggle: handleDebugToggle
+    })
+  }
+}
 
 function handleLangChange(lang: LangCode): void {
   currentLang = lang
-  // Rebuild tray menu
-  if (_tray && panelWindow) {
-    buildTrayMenu(_tray, panelWindow, currentLang, handleLangChange)
-  }
-  // Broadcast to all renderer windows so they sync
+  rebuildTray()
   petWindow?.webContents.send('locale-changed', lang)
   panelWindow?.webContents.send('locale-changed', lang)
+}
+
+function handleDebugToggle(enabled: boolean): void {
+  debugEnabled = enabled
+  petWindow?.webContents.send('toggle-debug', enabled)
+  rebuildTray()
 }
 
 // Hit regions for Windows click-through polling
@@ -50,6 +62,7 @@ app.whenReady().then(() => {
   petWindow = createPetWindow()
   panelWindow = createPanelWindow()
   _tray = createTray(panelWindow, currentLang, handleLangChange)
+  rebuildTray()
   growthManager.setPetWindow(petWindow)
 
   // Always send pet state once pet window finishes loading
@@ -355,7 +368,7 @@ function setupIpcHandlers(): void {
     const { workArea } = screen.getPrimaryDisplay()
     const clampedX = Math.max(workArea.x, Math.min(Math.round(x), workArea.x + workArea.width - 128))
     const clampedY = Math.max(workArea.y, Math.min(Math.round(y), workArea.y + workArea.height - 128))
-    petWindow.setPosition(clampedX, clampedY)
+    petWindow.setBounds({ x: clampedX, y: clampedY, width: 128, height: 128 })
   })
 
   // Click-through control
@@ -367,7 +380,7 @@ function setupIpcHandlers(): void {
   ipcMain.on('drag-move', (_e, dx: number, dy: number) => {
     if (!petWindow) return
     const [x, y] = petWindow.getPosition()
-    petWindow.setPosition(x + dx, y + dy)
+    petWindow.setBounds({ x: x + dx, y: y + dy, width: 128, height: 128 })
   })
 
   // Update hit regions (for Windows click-through polling)
@@ -409,7 +422,7 @@ function startBoundsCheck(): void {
     if (x < workArea.x || x > maxX || y < workArea.y || y > maxY) {
       const newX = Math.max(workArea.x, Math.min(x, maxX))
       const newY = Math.max(workArea.y, Math.min(y, maxY))
-      petWindow.setPosition(newX, newY)
+      petWindow.setBounds({ x: newX, y: newY, width: 128, height: 128 })
     }
   }, 5000)
 }

@@ -40,8 +40,21 @@ export default function App(): JSX.Element {
     return () => window.removeEventListener('contextmenu', handler)
   }, [])
 
+  // Debug overlay (toggled via tray menu)
+  const [showDebug, setShowDebug] = useState(false)
+  const [, forceUpdate] = useState(0)
+  useEffect(() => {
+    const unsub = window.api.onToggleDebug((enabled) => setShowDebug(enabled))
+    return unsub
+  }, [])
+  useEffect(() => {
+    if (!showDebug) return
+    const id = setInterval(() => forceUpdate((n) => n + 1), 100)
+    return () => clearInterval(id)
+  }, [showDebug])
+
   // Physics: walking, gravity, anim state
-  const { animState, facingLeft, startDrag, endDrag, onDragMove } = usePetPhysics()
+  const { animState, facingLeftRef, stateRef, startDrag, endDrag, onDragMove } = usePetPhysics()
 
   // Drag & drop
   usePetDrag(containerRef, {
@@ -87,19 +100,47 @@ export default function App(): JSX.Element {
       style={{
         width: '100%',
         height: '100%',
+        position: 'relative',
         display: 'flex',
         alignItems: 'flex-end',
         justifyContent: 'center',
         background: 'transparent',
-        userSelect: 'none'
+        userSelect: 'none',
+        overflow: 'hidden'
       }}
     >
+      {showDebug && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            background: 'rgba(0,0,0,0.85)',
+            color: '#0f0',
+            fontSize: 9,
+            fontFamily: 'monospace',
+            padding: '2px 3px',
+            lineHeight: 1.3,
+            whiteSpace: 'pre',
+            overflow: 'hidden',
+            pointerEvents: 'none',
+            zIndex: 999
+          }}
+        >
+          {[
+            `${displayState}${idleOverride ? `(${idleOverride})` : ''} f:${frameIndex}`,
+            `${facingLeftRef.current ? 'L' : 'R'} vx:${stateRef.current?.vx?.toFixed(1)} g:${stateRef.current?.grounded ? 'Y' : 'N'}`,
+            `${stateRef.current?.x?.toFixed(0)},${stateRef.current?.y?.toFixed(0)}`
+          ].join('\n')}
+        </div>
+      )}
       <div ref={containerRef} style={{ cursor: 'grab' }}>
         {spriteConfig ? (
           <SpriteCanvas
             spriteConfig={spriteConfig}
             frameIndex={frameIndex}
-            facingLeft={facingLeft}
+            facingLeft={facingLeftRef.current ?? false}
             scale={2}
           />
         ) : (

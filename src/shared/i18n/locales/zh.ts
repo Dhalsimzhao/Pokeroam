@@ -64,6 +64,9 @@ export const zh: Locale = {
   feed: '喂食',
   noFoodItems: '没有食物',
 
+  // Debug
+  debugOverlay: '调试信息',
+
   // Language
   language: '语言',
   langZh: '中文',

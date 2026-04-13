@@ -2,19 +2,19 @@
 
 - Check out `Accessing Task Documents` and `Accessing Script Files` in `.ai/config.md` for context about mentioned `*.md` and `*.sh` files.
 - All `*.md` and `*.sh` files should exist; you should not create any new files unless explicitly instructed.
-  - The `Copilot_Scrum.md` file should already exist, it may or may not contain content from the last scrum.
+  - The `Scrum.md` file should already exist, it may or may not contain content from the last scrum.
   - If you cannot find the file, you are looking at a wrong folder.
 - Following `Leveraging the Knowledge Base` in `.ai/config.md`, find knowledge and documents for this project in `.ai/KnowledgeBase/Index.md`.
 
 ## Goal and Constraints
 
-- Your goal is to finish a design document in `Copilot_Scrum.md` to address a problem.
-- You are only allowed to update `Copilot_Scrum.md`.
+- Your goal is to finish a design document in `Scrum.md` to address a problem.
+- You are only allowed to update `Scrum.md`.
 - You are not allowed to modify any other files.
 - The phrasing of the request may look like asking for code change, but your actual work is to write the design document.
 - "Task" in the request always means a task under the `# TASKS` section in the design document.
 
-## Copilot_Scrum.md Structure
+## Scrum.md Structure
 
 - `# !!!SCRUM!!!`: This file always begins with this title.
 - `# DESIGN REQUEST`: An exact copy of the problem description I gave you.
@@ -41,15 +41,15 @@
 Ignore this section if there is no "# Problem" in the LATEST chat message.
 I am starting a fresh new request.
 
-- You should override `Copilot_Scrum.md` with only one title `# !!!SCRUM!!!`.
-  - At the moment, `Copilot_Scrum.md` may contain old tasks from previous requests, even if it may look like the document is already finished for the current scrum, always clean it up.
+- You should override `Scrum.md` with only one title `# !!!SCRUM!!!`.
+  - At the moment, `Scrum.md` may contain old tasks from previous requests, even if it may look like the document is already finished for the current scrum, always clean it up.
 - After overriding, copy precisely my problem description in `# Problem` from the LATEST chat message under `# DESIGN REQUEST`.
 - Add an empty `# UPDATES` section after `# DESIGN REQUEST`.
 
 ### Update current Document (only when "# Update" appears in the LATEST chat message)
 
 Ignore this section if there is no "# Update" in the LATEST chat message.
-I am going to propose some change to `Copilot_Scrum.md`.
+I am going to propose some change to `Scrum.md`.
 
 - Copy precisely my problem description in `# Update` from the LATEST chat message to the `# UPDATES` section, with a new sub-section `## UPDATE`.
 - The new `## UPDATE` should be appended to the end of the existing `# UPDATES` section (before `# TASKS`).
@@ -68,7 +68,7 @@ I made important updates to the source code manually during the execution of the
 
 ## Step 2. Understand the Goal and Quality Requirement
 
-- Your goal is to help me break down the problem into small tasks, write it down to `Copilot_Scrum.md`.
+- Your goal is to help me break down the problem into small tasks, write it down to `Scrum.md`.
 - Each task should be:
   - Small enough to only represent a single idea or feature upgrade.
   - Deliver a complete piece of functionality.
@@ -128,7 +128,7 @@ I made important updates to the source code manually during the execution of the
 
 ## Step 5. Mark the Completion
 
-- Ensure there is a `# !!!FINISHED!!!` mark at the end of `Copilot_Scrum.md`.
+- Ensure there is a `# !!!FINISHED!!!` mark at the end of `Scrum.md`.
 
 ## Step 6. Learning (only when "# Learn" appears in the LATEST chat message)
 
@@ -137,13 +137,13 @@ I made important updates to the source code manually during the execution of the
 ### Step 6.1. Identify the Last Completed Task
 
 - Identify the last completed task.
-- The current `Copilot_Task.md`, `Copilot_Planning.md` and `Copilot_Execution.md` are associated to that task.
+- The current `Task.md`, `Planning.md` and `Execution.md` are associated to that task.
 
 ### Step 6.2. Identify My Inputs
 
-- Read through `Copilot_Execution.md`. There may be some fixing attempts, done by you.
-- Compare existing source code with `Copilot_Execution.md`, finding what is changed.
-  - Don't rely on `git` to identify changes, as I always commit periodically. Compare actual source code with `Copilot_Execution.md`.
+- Read through `Execution.md`. There may be some fixing attempts, done by you.
+- Compare existing source code with `Execution.md`, finding what is changed.
+  - Don't rely on `git` to identify changes, as I always commit periodically. Compare actual source code with `Execution.md`.
   - During comparing, take into consideration the fixing attempts, as sometimes you didn't update the main content.
 - Identify all differences between the document and the source code:
   - If caused by any fixing attempts, ignore it.
@@ -152,15 +152,15 @@ I made important updates to the source code manually during the execution of the
     - It may be canceled by a further fixing attempt, ignore it.
     - Otherwise it was a user edit.
   - Any other difference is a user edit.
-- If there is no `# !!!VERIFIED!!!` in `Copilot_Execution.md`, it means you failed to deliver the task. My edit will also reflect the final solution.
+- If there is no `# !!!VERIFIED!!!` in `Execution.md`, it means you failed to deliver the task. My edit will also reflect the final solution.
 - Carefully read through and analyze all user edits, understand my preferences about the source code.
 
 ### Step 6.3 Write Down Findings
 
 - If every change is ignored by the rules above, skip this step.
-- Create a new file `Copilot_Execution_Finding.md` with topic `# Comparing to User Edit`.
-  - Should stay in the same folder as `Copilot_Execution.md`.
-- Add your findings to `Copilot_Execution_Finding.md`.
+- Create a new file `Execution_Finding.md` with topic `# Comparing to User Edit`.
+  - Should stay in the same folder as `Execution.md`.
+- Add your findings to `Execution_Finding.md`.
 
 ### Step 6.4 Learn
 
@@ -168,11 +168,11 @@ I made important updates to the source code manually during the execution of the
 - These files recorded how you interpreted the last completed task, and how I wanted you to adjust.
 - Find out what you can learn about my philosophy and preferences.
 - Check all future tasks, apply what you have learned, and adjust accordingly.
-  - For each unfinished task that can be improved, update related content in `Copilot_Scrum.md`.
+  - For each unfinished task that can be improved, update related content in `Scrum.md`.
 
 ### Step 6.5 Backup
 
 - You must only run this step after finishing all above steps.
-- Find and execute `copilot-prepare.sh --backup`.
+- Find and execute `prepare.sh --backup`.
   - Remember the first line of the output — it has the absolute path to the backup folder.
-  - This backs up and deletes `Copilot_Task.md`, `Copilot_Planning.md`, `Copilot_Execution.md`, and `Copilot_Execution_Finding.md`.
+  - This backs up and deletes `Task.md`, `Planning.md`, `Execution.md`, and `Execution_Finding.md`.

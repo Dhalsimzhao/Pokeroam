@@ -4,14 +4,14 @@
 
 ### Design Explanation
 
-{{SLOT_KB_MAIN_PROCESS: Add knowledge base entries about the main process architecture here as you accumulate them. Each entry should have a descriptive title, bullet points of key design decisions, and a link to a detail document. Example:
-
-#### Pet Window Management
-- How the pet window maintains always-on-top and click-through behavior
-- Cursor polling mechanism for hit detection
-- Position management via IPC
-- [Design Explanation](MainProcess/PetWindowManagement.md)
-}}
+#### Pet Window Position Management
+- Position update pipeline: renderer physics → IPC → main process `setBounds()`
+- **Critical**: Must use `setBounds()` not `setPosition()` on Windows — transparent windows grow width with `setPosition()`
+- Three call sites: physics tick (60Hz), drag-move, periodic bounds check (5s)
+- Dual-level boundary clamping: renderer-side velocity reversal + main-side coordinate clamping
+- Click-through: 16ms cursor polling against hit regions reported every 500ms
+- Debug tooling: tray-menu overlay + Playwright dimension monitor script
+- [Design Explanation](MainProcess/PetWindowPositionManagement.md)
 
 ### Choosing APIs
 

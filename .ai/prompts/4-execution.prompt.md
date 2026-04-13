@@ -6,22 +6,22 @@
 
 ## Goal and Constraints
 
-- Your goal is to apply all code changes described in `Copilot_Execution.md` to the actual source code.
+- Your goal is to apply all code changes described in `Execution.md` to the actual source code.
 - You must ensure the source code compiles (type checks pass).
 - You must ensure all tests pass (if applicable).
-- You should follow `Copilot_Execution.md` as closely as possible, but use your judgment for obvious errors.
+- You should follow `Execution.md` as closely as possible, but use your judgment for obvious errors.
 
 ## Step 1. Identify the Problem
 
 - Find `# Update` in the LATEST chat message.
-  - If an update appears, add it to `Copilot_Execution.md` and modify source code accordingly.
+  - If an update appears, add it to `Execution.md` and modify source code accordingly.
   - If no update exists, proceed with executing the plan already documented.
 
 ## Step 2. Apply Code Changes
 
-- Follow the `# EXECUTION PLAN` in `Copilot_Execution.md` step by step.
+- Follow the `# EXECUTION PLAN` in `Execution.md` step by step.
 - Apply each code change to the specified file and location.
-- Mark completed steps with `[DONE]` annotations in `Copilot_Execution.md`.
+- Mark completed steps with `[DONE]` annotations in `Execution.md`.
 
 ## Step 3. Make Sure the Code Compiles
 
@@ -34,7 +34,7 @@
 
 #### Build the Project
 
-- Check `# AFFECTED PROJECTS` in `Copilot_Execution.md` to find what to build.
+- Check `# AFFECTED PROJECTS` in `Execution.md` to find what to build.
 - Run the build/typecheck command and check for errors.
 
 #### Fix Compile Errors
@@ -46,11 +46,11 @@
     - Explain why the original change did not work.
     - Explain what you need to do.
     - Explain why you think it would solve the build break.
-    - Log these in `Copilot_Execution.md`, with section `## Fixing attempt No.<attempt_number>` in `# FIXING ATTEMPTS`.
+    - Log these in `Execution.md`, with section `## Fixing attempt No.<attempt_number>` in `# FIXING ATTEMPTS`.
 
 #### Code Generation
 
-- Check if any code generation is necessary (see `Copilot_Execution.md` and `copilot-instructions.md`).
+- Check if any code generation is necessary (see `Execution.md` and `config.md`).
 - If code generation is needed, run the appropriate commands.
 
 #### Finishing
@@ -69,7 +69,7 @@
 
 - Run unit tests: `pnpm test`
 - Run E2E tests (if affected): `pnpm test:e2e`
-- Check `# AFFECTED PROJECTS` in `Copilot_Execution.md` to determine which tests to run.
+- Check `# AFFECTED PROJECTS` in `Execution.md` to determine which tests to run.
 - Make sure any newly added test cases are actually executed.
 
 #### Fix Failed Tests
@@ -82,7 +82,7 @@
     - Explain why the original change did not work.
     - Explain what you need to do.
     - Explain why you think it would solve the test break.
-    - Log these in `Copilot_Execution.md`, with section `## Fixing attempt No.<attempt_number>` in `# FIXING ATTEMPTS`.
+    - Log these in `Execution.md`, with section `## Fixing attempt No.<attempt_number>` in `# FIXING ATTEMPTS`.
 - After fixing, exit the sub agent and tell the main agent to go back to `Step 3. Make Sure the Code Compiles`.
 
 ## Step 5. Code Quality

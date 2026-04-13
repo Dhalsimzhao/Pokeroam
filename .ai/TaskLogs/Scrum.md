@@ -2,7 +2,7 @@
 
 # DESIGN REQUEST
 
-修复宠物走出屏幕边界的 bug。根据调查报告（Copilot_Investigate.md），确认两个独立根因：
+修复宠物走出屏幕边界的 bug。根据调查报告（Investigate.md），确认两个独立根因：
 1. WorkArea 缓存过期：`usePetPhysics.ts` 中 `workAreaRef` 仅在初始化时获取一次，显示器变化后边界失效。
 2. 拖拽无边界检查：`index.ts` 的 `drag-move` IPC handler 直接 `setPosition(x+dx, y+dy)` 无 clamp，快速拖拽或 mouseup 丢失时宠物出界。
 

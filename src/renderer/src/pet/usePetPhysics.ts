@@ -5,7 +5,7 @@ const WALK_SPEED = 1.5 // pixels per frame
 const GRAVITY = 0.5 // pixels per frame²
 const WINDOW_SIZE = 128
 
-interface PhysicsState {
+export interface PhysicsState {
   x: number
   y: number
   vx: number
@@ -18,6 +18,8 @@ interface PhysicsState {
 interface PhysicsAPI {
   animState: PetAnimState
   facingLeft: boolean
+  facingLeftRef: React.RefObject<boolean>
+  stateRef: React.RefObject<PhysicsState>
   startDrag: () => void
   endDrag: () => void
   onDragMove: (dx: number, dy: number) => void
@@ -30,6 +32,7 @@ function randomBetween(min: number, max: number): number {
 export function usePetPhysics(): PhysicsAPI {
   const [animState, setAnimState] = useState<PetAnimState>('idle')
   const [facingLeft, setFacingLeft] = useState(false)
+  const facingLeftRef = useRef(false)
   const stateRef = useRef<PhysicsState>({
     x: 0,
     y: 0,
@@ -122,7 +125,10 @@ export function usePetPhysics(): PhysicsAPI {
 
       window.api.setPetPosition(s.x, s.y)
       setAnimState(s.animState)
-      setFacingLeft(s.facingLeft)
+      if (s.facingLeft !== facingLeftRef.current) {
+        facingLeftRef.current = s.facingLeft
+        setFacingLeft(s.facingLeft)
+      }
 
       rafId = requestAnimationFrame(tick)
     }
@@ -187,5 +193,5 @@ export function usePetPhysics(): PhysicsAPI {
     s.y += dy
   }
 
-  return { animState, facingLeft, startDrag, endDrag, onDragMove }
+  return { animState, facingLeft, facingLeftRef, stateRef, startDrag, endDrag, onDragMove }
 }

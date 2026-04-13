@@ -64,6 +64,9 @@ export const en: Locale = {
   feed: 'Feed',
   noFoodItems: 'No food items',
 
+  // Debug
+  debugOverlay: 'Debug Overlay',
+
   // Language
   language: 'Language',
   langZh: '中文',

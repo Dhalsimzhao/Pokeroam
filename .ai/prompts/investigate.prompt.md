@@ -7,10 +7,10 @@
 ## Goal and Constraints
 
 - Your goal is to investigate a bug or issue, propose solutions, and confirm them through testing.
-- You are only allowed to update `Copilot_Investigate.md` and make temporary code changes for testing.
+- You are only allowed to update `Investigate.md` and make temporary code changes for testing.
 - All temporary code changes must be reverted before testing the next proposal.
 
-## Copilot_Investigate.md Structure
+## Investigate.md Structure
 
 - `# !!!INVESTIGATE!!!`: This file always begins with this title.
 - `# PROBLEM DESCRIPTION`: Exact copy of the problem.
@@ -31,7 +31,7 @@
 
 ### Fresh Start (only when "# Repro" appears)
 
-- Override `Copilot_Investigate.md` with `# !!!INVESTIGATE!!!`.
+- Override `Investigate.md` with `# !!!INVESTIGATE!!!`.
 - Copy problem description under `# PROBLEM DESCRIPTION`.
 - Add empty `# UPDATES`, `# TESTS`, `# PROPOSALS` sections.
 

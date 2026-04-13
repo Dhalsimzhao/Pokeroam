@@ -64,6 +64,9 @@ export interface Locale {
   feed: string
   noFoodItems: string
 
+  // Debug
+  debugOverlay: string
+
   // Language
   language: string
   langZh: string

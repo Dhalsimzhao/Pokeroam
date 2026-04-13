@@ -7,19 +7,19 @@
 ## Goal and Constraints
 
 - Your goal is to review a document as one member of a review panel.
-- The mentioned `Copilot_Review.md` and `Copilot_Review_*_*.md` files are in `.ai/TaskLogs/`.
+- The mentioned `Review.md` and `Review_*_*.md` files are in `.ai/TaskLogs/`.
 - Each model writes its review to a separate file.
-- When you are asked to create a `Copilot_Review_*_*.md`, you are only allowed to create your own review file.
+- When you are asked to create a `Review_*_*.md`, you are only allowed to create your own review file.
 - Document review should consider the knowledge base.
 - Document review should consider learnings from `KnowledgeBase/Learning.md`, `Learning/Learning_Coding.md`, and `Learning/Learning_Testing.md` if they exist.
 
 ## Identify the Review Board Team
 
 - In the LATEST chat message there should be a section called `## Reviewer Board Files`.
-- Model and their file name fragment is bullet-listed: `{ModelName} -> Copilot_Review_{Finished|Writing}_{FileNameFragment}.md`.
+- Model and their file name fragment is bullet-listed: `{ModelName} -> Review_{Finished|Writing}_{FileNameFragment}.md`.
 - If you cannot find this section, stop immediately.
 
-## Copilot_Review_*_*.md Structure
+## Review_*_*.md Structure
 
 - `# Review Target: {TargetDocumentName}`
 - `## Opinion`: Your opinion of the target document.
@@ -30,10 +30,10 @@
 ## Step 1. Identify the Target Document to Review
 
 - Find the title in the LATEST chat message:
-  - `# Scrum`: review `Copilot_Scrum.md`, focus only on unfinished tasks (`- [ ]`).
-  - `# Design`: review `Copilot_Task.md`, from `# INSIGHTS AND REASONING` to the end.
-  - `# Plan`: review `Copilot_Planning.md`, from `# EXECUTION PLAN` to the end.
-  - `# Summary`: review `Copilot_Execution.md`, from `# EXECUTION PLAN` to the end.
+  - `# Scrum`: review `Scrum.md`, focus only on unfinished tasks (`- [ ]`).
+  - `# Design`: review `Task.md`, from `# INSIGHTS AND REASONING` to the end.
+  - `# Plan`: review `Planning.md`, from `# EXECUTION PLAN` to the end.
+  - `# Summary`: review `Execution.md`, from `# EXECUTION PLAN` to the end.
   - `# Final`: skip to `Final Review` section.
   - `# Apply`: skip to `Apply Review` section.
 - If there is nothing: it means you are accidentally stopped. Continue your work.
@@ -41,8 +41,8 @@
 ## Step 2. Identify Documents from the Review Board
 
 - You are one of the models. `YourFileNameFragment` is your own file name fragment.
-- All reviews from the PREVIOUS ROUND should be `Copilot_Review_Finished_{FileNameFragment}.md`.
-- You write `Copilot_Review_Writing_{FileNameFragment}.md` in the CURRENT ROUND.
+- All reviews from the PREVIOUS ROUND should be `Review_Finished_{FileNameFragment}.md`.
+- You write `Review_Writing_{FileNameFragment}.md` in the CURRENT ROUND.
 
 ## Step 3. Read Context
 
@@ -53,7 +53,7 @@
 
 ## Step 4. Write Your Review
 
-- Create: `Copilot_Review_Writing_{YourFileNameFragment}.md`
+- Create: `Review_Writing_{YourFileNameFragment}.md`
   - If this file already exists, you have already completed the review — stop.
 - Complete the document:
   - `## Opinion`: Your complete summarized feedback. Don't omit anything from previous rounds.
@@ -93,8 +93,8 @@
 
 ### Step F1. Verify Convergence
 
-- Execute `copilot-prepare-review.sh` to rename Writing → Finished files.
-- Collect all `Copilot_Review_Finished_*.md` files.
+- Execute `prepare-review.sh` to rename Writing → Finished files.
+- Collect all `Review_Finished_*.md` files.
 - Ensure:
   - All models in the review board have files.
   - All target the same document.
@@ -103,7 +103,7 @@
 ### Step F2. Create the Summary
 
 - Read all `## Opinion` sections.
-- Consolidate into a single cohesive review in `Copilot_Review.md`.
+- Consolidate into a single cohesive review in `Review.md`.
   - Title: `# Review Target: {TargetDocumentName}`
   - DO NOT mention which model offered which opinion.
   - Ignore comments against `# !!!SOMETHING!!!` markers.
@@ -112,12 +112,12 @@
 
 ### Step A1. Identify the Target Document
 
-- `Copilot_Review.md` title tells you which document to update.
+- `Review.md` title tells you which document to update.
 - Follow the corresponding prompt file:
-  - `Copilot_Scrum.md` → `0-scrum.prompt.md`
-  - `Copilot_Task.md` → `1-design.prompt.md`
-  - `Copilot_Planning.md` → `2-planning.prompt.md`
-  - `Copilot_Execution.md` → `3-summarizing.prompt.md`
+  - `Scrum.md` → `0-scrum.prompt.md`
+  - `Task.md` → `1-design.prompt.md`
+  - `Planning.md` → `2-planning.prompt.md`
+  - `Execution.md` → `3-summarizing.prompt.md`
 
 ### Step A2. Apply the Review
 
@@ -125,5 +125,5 @@
 
 ### Step A3. Clean Up
 
-- Delete all `Copilot_Review_*_*.md` files.
-- Delete `Copilot_Review.md`.
+- Delete all `Review_*_*.md` files.
+- Delete `Review.md`.

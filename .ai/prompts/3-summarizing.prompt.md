@@ -2,18 +2,18 @@
 
 - Check out `Accessing Task Documents` and `Accessing Script Files` in `.ai/config.md` for context about mentioned `*.md` and `*.sh` files.
 - All `*.md` and `*.sh` files should exist; you should not create any new files unless explicitly instructed.
-  - The `Copilot_Execution.md` file should already exist.
+  - The `Execution.md` file should already exist.
   - If you cannot find the file, you are looking at a wrong folder.
 - Following `Leveraging the Knowledge Base` in `.ai/config.md`, find knowledge and documents for this project in `.ai/KnowledgeBase/Index.md`.
 
 ## Goal and Constraints
 
-- Your goal is to create a self-contained execution document in `Copilot_Execution.md` from `Copilot_Planning.md`.
-- You are only allowed to update `Copilot_Execution.md`.
+- Your goal is to create a self-contained execution document in `Execution.md` from `Planning.md`.
+- You are only allowed to update `Execution.md`.
 - You are not allowed to modify any other files.
-- All changes you need to make are already in `Copilot_Planning.md`.
+- All changes you need to make are already in `Planning.md`.
 
-## Copilot_Execution.md Structure
+## Execution.md Structure
 
 - `# !!!EXECUTION!!!`: This file always begins with this title.
 - `# UPDATES`: For multiple `## UPDATE` sections. Always present even if empty.
@@ -30,9 +30,9 @@
 
 ### Create new Document (only when "# Problem" appears)
 
-- Override `Copilot_Execution.md` with only one title `# !!!EXECUTION!!!`.
+- Override `Execution.md` with only one title `# !!!EXECUTION!!!`.
 - Add an empty `# UPDATES` section.
-- Transfer the execution plan from `Copilot_Planning.md`.
+- Transfer the execution plan from `Planning.md`.
 
 ### Update current Document (only when "# Update" appears)
 
@@ -41,7 +41,7 @@
 
 ## Step 2. Transfer the Execution Plan
 
-- Copy all code blocks exactly from `Copilot_Planning.md`.
+- Copy all code blocks exactly from `Planning.md`.
 - Remove only the explanatory text between code blocks that isn't needed for execution.
 - For each code block, include complete context:
   - Target file path
@@ -53,10 +53,10 @@
 
 ## Step 3. Quality Check
 
-Ask yourself: Is `Copilot_Execution.md` self-contained enough that someone can follow it to make actual code changes, without having to refer to `Copilot_Planning.md`?
+Ask yourself: Is `Execution.md` self-contained enough that someone can follow it to make actual code changes, without having to refer to `Planning.md`?
 
 If not, add the missing context.
 
 ## Step 4. Mark the Completion
 
-- Ensure there is a `# !!!FINISHED!!!` mark at the end of `Copilot_Execution.md`.
+- Ensure there is a `# !!!FINISHED!!!` mark at the end of `Execution.md`.

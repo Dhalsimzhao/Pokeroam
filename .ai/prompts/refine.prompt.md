@@ -24,22 +24,22 @@
 
 ## Step 1. Find the Earliest Backup Folder
 
-- Execute `copilot-prepare.sh --earliest` to get the path to the earliest backup folder.
+- Execute `prepare.sh --earliest` to get the path to the earliest backup folder.
 - If the script fails, there is no material to learn from — stop.
 
 ## Step 2. Read All Documents
 
 - Read all files in the earliest backup folder. These may include:
-  - `Copilot_Task.md`
-  - `Copilot_Planning.md`
-  - `Copilot_Execution.md`
-  - `Copilot_Execution_Finding.md`
+  - `Task.md`
+  - `Planning.md`
+  - `Execution.md`
+  - `Execution_Finding.md`
 
 ## Step 3. Extract Findings
 
 - Focus on:
   - All `## UPDATE` sections across documents.
-  - `# Comparing to User Edit` from `Copilot_Execution_Finding.md`.
+  - `# Comparing to User Edit` from `Execution_Finding.md`.
 - Identify learnings about:
   - Best practices and coding preferences.
   - Mistakes made and corrections applied.

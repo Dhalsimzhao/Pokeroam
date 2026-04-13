@@ -39,6 +39,7 @@ interface ElectronAPI {
   openPanel: () => void
   setLocale: (lang: string) => void
   onLocaleChanged: (cb: (data: unknown) => void) => () => void
+  onToggleDebug: (cb: (enabled: boolean) => void) => () => void
 }
 
 declare global {

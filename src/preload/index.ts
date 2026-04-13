@@ -68,5 +68,8 @@ contextBridge.exposeInMainWorld('api', {
   setLocale: (lang: string): void => {
     ipcRenderer.send('set-locale', lang)
   },
-  onLocaleChanged: (cb: Callback) => onIpc('locale-changed', cb)
+  onLocaleChanged: (cb: Callback) => onIpc('locale-changed', cb),
+
+  // Debug
+  onToggleDebug: (cb: Callback<boolean>) => onIpc('toggle-debug', cb)
 })

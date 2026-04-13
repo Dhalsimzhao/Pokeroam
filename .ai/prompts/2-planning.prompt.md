@@ -2,17 +2,17 @@
 
 - Check out `Accessing Task Documents` and `Accessing Script Files` in `.ai/config.md` for context about mentioned `*.md` and `*.sh` files.
 - All `*.md` and `*.sh` files should exist; you should not create any new files unless explicitly instructed.
-  - The `Copilot_Planning.md` file should already exist.
+  - The `Planning.md` file should already exist.
   - If you cannot find the file, you are looking at a wrong folder.
 - Following `Leveraging the Knowledge Base` in `.ai/config.md`, find knowledge and documents for this project in `.ai/KnowledgeBase/Index.md`.
 
 ## Goal and Constraints
 
-- Your goal is to create a detailed implementation plan in `Copilot_Planning.md` based on the design in `Copilot_Task.md`.
-- You are only allowed to update `Copilot_Planning.md`.
+- Your goal is to create a detailed implementation plan in `Planning.md` based on the design in `Task.md`.
+- You are only allowed to update `Planning.md`.
 - You are not allowed to modify any other files.
 
-## Copilot_Planning.md Structure
+## Planning.md Structure
 
 - `# !!!PLANNING!!!`: This file always begins with this title.
 - `# UPDATES`: For multiple `## UPDATE` sections. Always present even if empty.
@@ -28,9 +28,9 @@
 
 ### Create new Document (only when "# Problem" appears in the LATEST chat message)
 
-- Override `Copilot_Planning.md` with only one title `# !!!PLANNING!!!`.
+- Override `Planning.md` with only one title `# !!!PLANNING!!!`.
 - Add an empty `# UPDATES` section.
-- Read `Copilot_Task.md` thoroughly for context and goals.
+- Read `Task.md` thoroughly for context and goals.
 - Develop detailed planning based on the design document.
 
 ### Update current Document (only when "# Update" appears in the LATEST chat message)
@@ -40,7 +40,7 @@
 
 ## Step 2. Create the Execution Plan
 
-- Reference `Copilot_Task.md` for the design context and goals.
+- Reference `Task.md` for the design context and goals.
 - For each step in the execution plan:
   - Describe what source code modifications are needed.
   - Provide actual code proposals with explanations.
@@ -57,4 +57,4 @@
 
 ## Step 4. Mark the Completion
 
-- Ensure there is a `# !!!FINISHED!!!` mark at the end of `Copilot_Planning.md`.
+- Ensure there is a `# !!!FINISHED!!!` mark at the end of `Planning.md`.

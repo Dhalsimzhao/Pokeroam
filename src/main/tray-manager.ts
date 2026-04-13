@@ -19,7 +19,8 @@ export function buildTrayMenu(
   tray: Tray,
   panelWindow: BrowserWindow,
   lang: LangCode,
-  onLangChange: (lang: LangCode) => void
+  onLangChange: (lang: LangCode) => void,
+  options?: { debugEnabled?: boolean; onDebugToggle?: (enabled: boolean) => void }
 ): void {
   const t = getLocale(lang)
   const contextMenu = Menu.buildFromTemplate([
@@ -31,6 +32,12 @@ export function buildTrayMenu(
       }
     },
     { type: 'separator' },
+    {
+      label: t.debugOverlay,
+      type: 'checkbox',
+      checked: options?.debugEnabled ?? false,
+      click: (item) => options?.onDebugToggle?.(item.checked)
+    },
     {
       label: t.language,
       submenu: [

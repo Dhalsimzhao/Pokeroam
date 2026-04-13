@@ -1,9 +1,9 @@
 #!/bin/bash
-# copilot-prepare.sh — Manage task document lifecycle
+# prepare.sh — Manage task document lifecycle
 # Usage:
-#   ./copilot-prepare.sh           # Clear all task documents for fresh start
-#   ./copilot-prepare.sh --backup  # Archive current docs to timestamped backup
-#   ./copilot-prepare.sh --earliest # Print path to earliest unprocessed backup
+#   ./prepare.sh           # Clear all task documents for fresh start
+#   ./prepare.sh --backup  # Archive current docs to timestamped backup
+#   ./prepare.sh --earliest # Print path to earliest unprocessed backup
 
 set -e
 
@@ -12,13 +12,13 @@ TASK_DIR="$REPO_ROOT/.ai/TaskLogs"
 LEARNING_DIR="$REPO_ROOT/.ai/Learning"
 
 TASK_FILES=(
-  "Copilot_Scrum.md"
-  "Copilot_Task.md"
-  "Copilot_Planning.md"
-  "Copilot_Execution.md"
-  "Copilot_Execution_Finding.md"
-  "Copilot_KB.md"
-  "Copilot_Investigate.md"
+  "Scrum.md"
+  "Task.md"
+  "Planning.md"
+  "Execution.md"
+  "Execution_Finding.md"
+  "KB.md"
+  "Investigate.md"
 )
 
 # Ensure TaskLogs directory exists
@@ -32,7 +32,7 @@ case "${1:-}" in
     echo "$BACKUP_DIR"
 
     FOUND=0
-    for f in "Copilot_Task.md" "Copilot_Planning.md" "Copilot_Execution.md" "Copilot_Execution_Finding.md"; do
+    for f in "Task.md" "Planning.md" "Execution.md" "Execution_Finding.md"; do
       if [ -f "$TASK_DIR/$f" ]; then
         cp "$TASK_DIR/$f" "$BACKUP_DIR/$f"
         rm "$TASK_DIR/$f"
@@ -77,18 +77,18 @@ case "${1:-}" in
     done
 
     # Create empty working files
-    echo "# !!!SCRUM!!!" > "$TASK_DIR/Copilot_Scrum.md"
-    echo "# !!!TASK!!!" > "$TASK_DIR/Copilot_Task.md"
-    echo "# !!!PLANNING!!!" > "$TASK_DIR/Copilot_Planning.md"
-    echo "# !!!EXECUTION!!!" > "$TASK_DIR/Copilot_Execution.md"
-    echo "# !!!KNOWLEDGE BASE!!!" > "$TASK_DIR/Copilot_KB.md"
-    echo "# !!!INVESTIGATE!!!" > "$TASK_DIR/Copilot_Investigate.md"
+    echo "# !!!SCRUM!!!" > "$TASK_DIR/Scrum.md"
+    echo "# !!!TASK!!!" > "$TASK_DIR/Task.md"
+    echo "# !!!PLANNING!!!" > "$TASK_DIR/Planning.md"
+    echo "# !!!EXECUTION!!!" > "$TASK_DIR/Execution.md"
+    echo "# !!!KNOWLEDGE BASE!!!" > "$TASK_DIR/KB.md"
+    echo "# !!!INVESTIGATE!!!" > "$TASK_DIR/Investigate.md"
 
     echo "Task documents cleared and initialized."
     ;;
 
   *)
-    echo "Usage: copilot-prepare.sh [--backup|--earliest]"
+    echo "Usage: prepare.sh [--backup|--earliest]"
     exit 1
     ;;
 esac

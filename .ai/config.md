@@ -77,14 +77,14 @@ Task documents live in `.ai/TaskLogs/`:
 
 | File | Purpose |
 |------|---------|
-| `Copilot_Scrum.md` | Task breakdown / scrum document |
-| `Copilot_Task.md` | Architecture design document |
-| `Copilot_Planning.md` | Implementation planning document |
-| `Copilot_Execution.md` | Execution summary with code changes |
-| `Copilot_Execution_Finding.md` | Findings from comparing user edits |
-| `Copilot_Investigate.md` | Bug investigation document |
-| `Copilot_KB.md` | Knowledge base draft document |
-| `Copilot_Review.md` | Consolidated review feedback |
+| `Scrum.md` | Task breakdown / scrum document |
+| `Task.md` | Architecture design document |
+| `Planning.md` | Implementation planning document |
+| `Execution.md` | Execution summary with code changes |
+| `Execution_Finding.md` | Findings from comparing user edits |
+| `Investigate.md` | Bug investigation document |
+| `KB.md` | Knowledge base draft document |
+| `Review.md` | Consolidated review feedback |
 
 These are working documents managed by the workflow. Do NOT create them manually — they are created and archived by workflow scripts and prompts.
 
@@ -97,8 +97,8 @@ Helper scripts in `.ai/scripts/`:
   - `--backup`: Archive current task documents to a timestamped backup folder in `.ai/Learning/`
   - `--earliest`: Print the path to the earliest unprocessed backup folder
 - `prepare-review.sh` — Manage review board files
-  - Renames `Copilot_Review_Writing_*.md` → `Copilot_Review_Finished_*.md`
-  - Deletes old `Copilot_Review_Finished_*.md` before renaming
+  - Renames `Review_Writing_*.md` → `Review_Finished_*.md`
+  - Deletes old `Review_Finished_*.md` before renaming
 
 ## External Tools Environment and Context
 
