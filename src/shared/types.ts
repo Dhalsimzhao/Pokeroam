@@ -111,3 +111,44 @@ export interface DailyReward {
   pokemonSpeciesId?: number
   items?: BackpackItem[]
 }
+
+// ---- Dialogue System ----
+export type DialogueEmotion =
+  | 'Normal'
+  | 'Happy'
+  | 'Pain'
+  | 'Angry'
+  | 'Worried'
+  | 'Sad'
+  | 'Crying'
+  | 'Shouting'
+  | 'Teary-Eyed'
+  | 'Determined'
+  | 'Joyous'
+  | 'Inspired'
+  | 'Surprised'
+  | 'Dizzy'
+  | 'Sigh'
+  | 'Stunned'
+
+export type DialogueEventType =
+  | 'idle'
+  | 'levelup'
+  | 'evolve'
+  | 'feed'
+  | 'drag'
+  | 'fall'
+  | 'fatigue'
+  | 'dailyReward'
+  | 'greeting'
+  | 'longIdle'
+
+export interface DialogueEntry {
+  emotion: DialogueEmotion
+  text: string
+}
+
+export interface DialogueData {
+  default: Record<DialogueEventType, DialogueEntry[]>
+  species: Record<string, Partial<Record<DialogueEventType, DialogueEntry[]>>>
+}

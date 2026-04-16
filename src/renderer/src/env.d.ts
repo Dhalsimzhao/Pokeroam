@@ -16,6 +16,8 @@ interface ElectronAPI {
   // Pet window commands
   setClickThrough: (ignore: boolean) => void
   dragMove: (dx: number, dy: number) => void
+  notifyDragEnd: () => void
+  notifyLanded: () => void
   setPetPosition: (x: number, y: number) => void
   getWorkArea: () => Promise<{ x: number; y: number; width: number; height: number }>
   updateHitRegions: (
@@ -39,6 +41,10 @@ interface ElectronAPI {
   openPanel: () => void
   setLocale: (lang: string) => void
   onLocaleChanged: (cb: (data: unknown) => void) => () => void
+  // Dialogue window events
+  onDialogueShow: (cb: (data: unknown) => void) => () => void
+  onDialogueHide: (cb: (data: unknown) => void) => () => void
+
   onToggleDebug: (cb: (enabled: boolean) => void) => () => void
 }
 

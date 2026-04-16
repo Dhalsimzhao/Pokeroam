@@ -20,7 +20,11 @@ export function buildTrayMenu(
   panelWindow: BrowserWindow,
   lang: LangCode,
   onLangChange: (lang: LangCode) => void,
-  options?: { debugEnabled?: boolean; onDebugToggle?: (enabled: boolean) => void }
+  options?: {
+    debugEnabled?: boolean
+    onDebugToggle?: (enabled: boolean) => void
+    onTestDialogue?: (eventType: string) => void
+  }
 ): void {
   const t = getLocale(lang)
   const contextMenu = Menu.buildFromTemplate([
@@ -38,6 +42,30 @@ export function buildTrayMenu(
       checked: options?.debugEnabled ?? false,
       click: (item) => options?.onDebugToggle?.(item.checked)
     },
+    ...(options?.onTestDialogue
+      ? [
+          {
+            label: t.testDialogue,
+            submenu: (
+              [
+                'idle',
+                'levelup',
+                'evolve',
+                'feed',
+                'drag',
+                'fall',
+                'fatigue',
+                'dailyReward',
+                'greeting',
+                'longIdle'
+              ] as const
+            ).map((eventType) => ({
+              label: eventType,
+              click: () => options.onTestDialogue!(eventType)
+            }))
+          }
+        ]
+      : []),
     {
       label: t.language,
       submenu: [

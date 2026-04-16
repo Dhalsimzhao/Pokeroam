@@ -2,34 +2,54 @@ import { app, BrowserWindow, ipcMain, Menu, screen, Tray } from 'electron'
 import { SaveManager } from './save-manager'
 import { createPetWindow } from './pet-window'
 import { createPanelWindow } from './panel-window'
+import { createDialogueWindow } from './dialogue-window'
 import { createTray, buildTrayMenu } from './tray-manager'
 import { GrowthManager } from './growth-manager'
 import { KeyboardMonitor } from './keyboard-monitor'
 import { FatigueDetector } from './fatigue-detector'
 import { DailyRewardManager } from './daily-reward'
-import type { SaveData } from '../shared/types'
+import { DialogueManager } from './dialogue-manager'
+import type { DialogueEventType, SaveData } from '../shared/types'
 import { POKEMON_SPECIES, getSpeciesById, getExpForLevel } from '../shared/pokemon-data'
-import { getItemById, ITEMS } from '../shared/item-data'
-import { MAX_LEVEL } from '../shared/constants'
+import { getItemById } from '../shared/item-data'
+import {
+  MAX_LEVEL,
+  IDLE_CHAT_MIN_MS,
+  IDLE_CHAT_MAX_MS,
+  LONG_IDLE_THRESHOLD_MS,
+  GREETING_DELAY_MS
+} from '../shared/constants'
 import { getLocale, localeName, type LangCode } from '../shared/i18n'
 
 let petWindow: BrowserWindow | null = null
 let panelWindow: BrowserWindow | null = null
+let dialogueWindow: BrowserWindow | null = null
 let _tray: Tray | null = null
 let saveManager: SaveManager
 let growthManager: GrowthManager
 let keyboardMonitor: KeyboardMonitor
 let fatigueDetector: FatigueDetector
 let dailyRewardManager: DailyRewardManager
+let dialogueManager: DialogueManager
 let saveData: SaveData | null = null
 let currentLang: LangCode = 'zh'
 let debugEnabled = false
+let lastInteractionTime = Date.now()
+let longIdleTriggered = false
 
 function rebuildTray(): void {
   if (_tray && panelWindow) {
     buildTrayMenu(_tray, panelWindow, currentLang, handleLangChange, {
       debugEnabled,
-      onDebugToggle: handleDebugToggle
+      onDebugToggle: handleDebugToggle,
+      onTestDialogue: (eventType: string) => {
+        if (!saveData?.activePokemonId) return
+        const pokemon = saveData.pokemon.find((p) => p.id === saveData!.activePokemonId)
+        if (!pokemon) return
+        const species = getSpeciesById(pokemon.speciesId)
+        if (!species) return
+        dialogueManager.showDialogue(species.name, eventType as DialogueEventType)
+      }
     })
   }
 }
@@ -47,6 +67,19 @@ function handleDebugToggle(enabled: boolean): void {
   rebuildTray()
 }
 
+function getActiveSpeciesName(): string | null {
+  if (!saveData?.activePokemonId) return null
+  const pokemon = saveData.pokemon.find((p) => p.id === saveData!.activePokemonId)
+  if (!pokemon) return null
+  const species = getSpeciesById(pokemon.speciesId)
+  return species?.name ?? null
+}
+
+function onUserInteraction(): void {
+  lastInteractionTime = Date.now()
+  longIdleTriggered = false
+}
+
 // Hit regions for Windows click-through polling
 let hitRegions: Array<{ x: number; y: number; width: number; height: number }> = []
 let cursorInside = false
@@ -61,13 +94,29 @@ app.whenReady().then(() => {
 
   petWindow = createPetWindow()
   panelWindow = createPanelWindow()
+  dialogueWindow = createDialogueWindow()
+  dialogueManager = new DialogueManager(dialogueWindow, petWindow)
   _tray = createTray(panelWindow, currentLang, handleLangChange)
   rebuildTray()
   growthManager.setPetWindow(petWindow)
+  growthManager.onLevelUp = (pokemonId) => {
+    if (pokemonId !== saveData?.activePokemonId) return
+    const name = getActiveSpeciesName()
+    if (name) dialogueManager.showDialogue(name, 'levelup')
+  }
+  growthManager.onEvolve = (pokemonId) => {
+    if (pokemonId !== saveData?.activePokemonId) return
+    const name = getActiveSpeciesName()
+    if (name) dialogueManager.showDialogue(name, 'evolve')
+  }
 
   // Always send pet state once pet window finishes loading
   petWindow.webContents.on('did-finish-load', () => {
     sendPetState()
+    setTimeout(() => {
+      const name = getActiveSpeciesName()
+      if (name) dialogueManager.showDialogue(name, 'greeting')
+    }, GREETING_DELAY_MS)
   })
 
   // If no save (first launch), show panel for starter selection
@@ -85,6 +134,8 @@ app.whenReady().then(() => {
   startBoundsCheck()
   startIdleXpTick()
   startKeyboardMonitoring()
+  startIdleChatTimer()
+  startLongIdleTracker()
 })
 
 // Don't quit when all windows closed (tray app)
@@ -237,9 +288,15 @@ function setupIpcHandlers(): void {
               saveData.pokedex.push(nextSpecies.id)
             }
             petWindow?.webContents.send('pet-evolve', { speciesId: nextSpecies.id })
+            if (pokemonId === saveData!.activePokemonId) {
+              dialogueManager.showDialogue(nextSpecies.name, 'evolve')
+            }
           }
         }
         petWindow?.webContents.send('pet-level-up', { level: pokemon.level })
+        if (pokemonId === saveData!.activePokemonId) {
+          dialogueManager.showDialogue(species.name, 'levelup')
+        }
       }
     } else if (['fire-stone', 'water-stone', 'thunder-stone', 'moon-stone'].includes(itemId)) {
       // Evolution stone — find matching evolution
@@ -252,6 +309,9 @@ function setupIpcHandlers(): void {
           saveData.pokedex.push(evolution.id)
         }
         petWindow?.webContents.send('pet-evolve', { speciesId: evolution.id })
+        if (pokemonId === saveData!.activePokemonId) {
+          dialogueManager.showDialogue(evolution.name, 'evolve')
+        }
         used = true
       }
     } else if (itemId === 'moomoo-milk') {
@@ -263,6 +323,9 @@ function setupIpcHandlers(): void {
         if (pokemon.exp >= nextLevelExp) {
           pokemon.level++
           petWindow?.webContents.send('pet-level-up', { level: pokemon.level })
+          if (pokemonId === saveData!.activePokemonId) {
+            dialogueManager.showDialogue(species.name, 'levelup')
+          }
         }
       }
       used = true
@@ -284,6 +347,8 @@ function setupIpcHandlers(): void {
     dailyRewardManager.claimReward(saveData, reward)
     saveManager.save(saveData)
     broadcastSaveData()
+    const rewardName = getActiveSpeciesName()
+    if (rewardName) dialogueManager.showDialogue(rewardName, 'dailyReward')
     return reward
   })
 
@@ -320,6 +385,8 @@ function setupIpcHandlers(): void {
           label: `${localeName(item.nameZh, item.name, currentLang)} ×${b.quantity}`,
           click: (): void => {
             petWindow?.webContents.send('context-menu-feed', b.itemId)
+            const feedName = getActiveSpeciesName()
+            if (feedName) dialogueManager.showDialogue(feedName, 'feed')
           }
         }
       })
@@ -387,6 +454,18 @@ function setupIpcHandlers(): void {
   ipcMain.on('update-hit-regions', (_e, regions) => {
     hitRegions = regions
   })
+
+  // Dialogue triggers from pet renderer
+  ipcMain.on('pet-drag-end', () => {
+    onUserInteraction()
+    const name = getActiveSpeciesName()
+    if (name) dialogueManager.showDialogue(name, 'drag')
+  })
+
+  ipcMain.on('pet-landed', () => {
+    const name = getActiveSpeciesName()
+    if (name) dialogueManager.showDialogue(name, 'fall')
+  })
 }
 
 // Windows click-through polling (same pattern as claude-detector)
@@ -438,14 +517,41 @@ function startIdleXpTick(): void {
     // Check fatigue
     if (fatigueDetector.check()) {
       petWindow?.webContents.send('fatigue-warning', null)
+      const fatigueName = getActiveSpeciesName()
+      if (fatigueName) dialogueManager.showDialogue(fatigueName, 'fatigue')
     }
   }, 60_000)
 }
 
 // Keyboard monitoring for XP and fatigue
+function startIdleChatTimer(): void {
+  const scheduleNext = (): void => {
+    const delay = IDLE_CHAT_MIN_MS + Math.random() * (IDLE_CHAT_MAX_MS - IDLE_CHAT_MIN_MS)
+    setTimeout(() => {
+      const name = getActiveSpeciesName()
+      if (name) dialogueManager.showDialogue(name, 'idle')
+      scheduleNext()
+    }, delay)
+  }
+  scheduleNext()
+}
+
+function startLongIdleTracker(): void {
+  setInterval(() => {
+    if (!saveData?.activePokemonId) return
+    const elapsed = Date.now() - lastInteractionTime
+    if (elapsed >= LONG_IDLE_THRESHOLD_MS && !longIdleTriggered) {
+      longIdleTriggered = true
+      const name = getActiveSpeciesName()
+      if (name) dialogueManager.showDialogue(name, 'longIdle')
+    }
+  }, 60_000)
+}
+
 function startKeyboardMonitoring(): void {
   keyboardMonitor.start(() => {
     if (!saveData) return
+    onUserInteraction()
     fatigueDetector.onKeystroke()
     if (growthManager.addKeyboardXp(saveData)) {
       saveManager.save(saveData)

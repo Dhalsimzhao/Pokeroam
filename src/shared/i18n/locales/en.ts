@@ -66,6 +66,7 @@ export const en: Locale = {
 
   // Debug
   debugOverlay: 'Debug Overlay',
+  testDialogue: 'Test Dialogue',
 
   // Language
   language: 'Language',

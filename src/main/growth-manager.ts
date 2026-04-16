@@ -5,6 +5,8 @@ import { IDLE_XP_PER_MINUTE, KEYBOARD_XP_PER_KEYSTROKE, MAX_LEVEL } from '../sha
 
 export class GrowthManager {
   private petWindow: BrowserWindow | null = null
+  onLevelUp?: (pokemonId: string) => void
+  onEvolve?: (pokemonId: string) => void
 
   setPetWindow(win: BrowserWindow): void {
     this.petWindow = win
@@ -61,11 +63,13 @@ export class GrowthManager {
 
       pokemon.level++
       this.petWindow?.webContents.send('pet-level-up', { level: pokemon.level })
+      this.onLevelUp?.(pokemon.id)
 
       // Check level-based evolution
       const evolved = this.checkEvolution(pokemon, save)
       if (evolved) {
         this.petWindow?.webContents.send('pet-evolve', { speciesId: pokemon.speciesId })
+        this.onEvolve?.(pokemon.id)
       }
     }
 

@@ -1,6 +1,6 @@
 import * as crypto from 'crypto'
 import type { SaveData, DailyReward } from '../shared/types'
-import { POKEMON, getExpForLevel, getSpeciesById } from '../shared/pokemon-data'
+import { getExpForLevel, getSpeciesById } from '../shared/pokemon-data'
 import { DAILY_REWARD_HOUR } from '../shared/constants'
 
 // Species tiers for reward generation

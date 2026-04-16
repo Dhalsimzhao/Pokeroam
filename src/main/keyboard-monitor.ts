@@ -1,4 +1,4 @@
-import { uIOhook, UiohookKey } from 'uiohook-napi'
+import { uIOhook } from 'uiohook-napi'
 import { KEYBOARD_XP_COOLDOWN_MS } from '../shared/constants'
 
 export class KeyboardMonitor {

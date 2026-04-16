@@ -28,6 +28,12 @@ contextBridge.exposeInMainWorld('api', {
   dragMove: (dx: number, dy: number): void => {
     ipcRenderer.send('drag-move', dx, dy)
   },
+  notifyDragEnd: (): void => {
+    ipcRenderer.send('pet-drag-end')
+  },
+  notifyLanded: (): void => {
+    ipcRenderer.send('pet-landed')
+  },
   setPetPosition: (x: number, y: number): void => {
     ipcRenderer.send('set-pet-position', x, y)
   },
@@ -69,6 +75,10 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.send('set-locale', lang)
   },
   onLocaleChanged: (cb: Callback) => onIpc('locale-changed', cb),
+
+  // Dialogue window events
+  onDialogueShow: (cb: Callback) => onIpc('dialogue-show', cb),
+  onDialogueHide: (cb: Callback) => onIpc('dialogue-hide', cb),
 
   // Debug
   onToggleDebug: (cb: Callback<boolean>) => onIpc('toggle-debug', cb)

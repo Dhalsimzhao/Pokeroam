@@ -1,0 +1,71 @@
+{
+  "default": {
+    "idle": [
+      { "emotion": "Normal", "text": "" },
+      { "emotion": "Happy", "text": "" },
+      { "emotion": "Sigh", "text": "" }
+    ],
+    "levelup": [
+      { "emotion": "Joyous", "text": "" },
+      { "emotion": "Happy", "text": "" },
+      { "emotion": "Determined", "text": "" }
+    ],
+    "evolve": [
+      { "emotion": "Determined", "text": "" },
+      { "emotion": "Surprised", "text": "" },
+      { "emotion": "Joyous", "text": "" }
+    ],
+    "feed": [
+      { "emotion": "Happy", "text": "" },
+      { "emotion": "Joyous", "text": "" }
+    ],
+    "drag": [
+      { "emotion": "Surprised", "text": "" },
+      { "emotion": "Dizzy", "text": "" },
+      { "emotion": "Angry", "text": "" }
+    ],
+    "fall": [
+      { "emotion": "Pain", "text": "" },
+      { "emotion": "Stunned", "text": "" },
+      { "emotion": "Dizzy", "text": "" }
+    ],
+    "fatigue": [
+      { "emotion": "Worried", "text": "" },
+      { "emotion": "Sad", "text": "" },
+      { "emotion": "Sigh", "text": "" }
+    ],
+    "dailyReward": [
+      { "emotion": "Joyous", "text": "" },
+      { "emotion": "Happy", "text": "" },
+      { "emotion": "Surprised", "text": "" }
+    ],
+    "greeting": [
+      { "emotion": "Happy", "text": "" },
+      { "emotion": "Normal", "text": "" },
+      { "emotion": "Joyous", "text": "" }
+    ],
+    "longIdle": [
+      { "emotion": "Sad", "text": "" },
+      { "emotion": "Worried", "text": "" },
+      { "emotion": "Sigh", "text": "" }
+    ]
+  },
+  "species": {
+    "pikachu": {
+      "idle": [
+        { "emotion": "Inspired", "text": "" },
+        { "emotion": "Happy", "text": "" },
+        { "emotion": "Joyous", "text": "" }
+      ],
+      "greeting": [
+        { "emotion": "Joyous", "text": "" }
+      ]
+    },
+    "charmander": {
+      "idle": [
+        { "emotion": "Normal", "text": "" },
+        { "emotion": "Determined", "text": "" }
+      ]
+    }
+  }
+}

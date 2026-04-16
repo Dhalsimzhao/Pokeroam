@@ -66,6 +66,7 @@ export interface Locale {
 
   // Debug
   debugOverlay: string
+  testDialogue: string
 
   // Language
   language: string

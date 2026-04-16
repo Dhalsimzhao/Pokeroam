@@ -8,3 +8,7 @@ export const MAX_LEVEL = 100
 export const SAVE_DIR = '.pokeroam'
 export const SAVE_FILE = 'save.json'
 export const STARTER_SPECIES = [1, 4, 7] as const
+export const IDLE_CHAT_MIN_MS = 120_000 // 2 minutes
+export const IDLE_CHAT_MAX_MS = 300_000 // 5 minutes
+export const LONG_IDLE_THRESHOLD_MS = 600_000 // 10 minutes
+export const GREETING_DELAY_MS = 2000

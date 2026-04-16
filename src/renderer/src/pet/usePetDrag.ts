@@ -44,6 +44,7 @@ export function usePetDrag(
       if (!isDragging.current) return
       isDragging.current = false
       cbRef.current.onDragEnd()
+      window.api.notifyDragEnd()
     }
 
     el.addEventListener('mousedown', onMouseDown)

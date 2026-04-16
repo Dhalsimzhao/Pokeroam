@@ -120,6 +120,7 @@ export function usePetPhysics(): PhysicsAPI {
           s.animState = 'idle'
           s.vx = 0
           nextActionRef.current = frameCount + Math.round(randomBetween(60, 120))
+          window.api.notifyLanded()
         }
       }
 

@@ -11,7 +11,7 @@ interface DailyRewardProps {
 
 export function DailyReward({ onBack }: DailyRewardProps): JSX.Element {
   const [reward, setReward] = useState<DailyRewardType | null>(null)
-  const [claimed, setClaimed] = useState(false)
+  const [_claimed, setClaimed] = useState(false)
   const [revealing, setRevealing] = useState(false)
   const { lang, t } = useI18n()
 

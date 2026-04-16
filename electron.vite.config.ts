@@ -14,7 +14,8 @@ export default defineConfig({
       rollupOptions: {
         input: {
           pet: resolve(__dirname, 'src/renderer/pet.html'),
-          panel: resolve(__dirname, 'src/renderer/panel.html')
+          panel: resolve(__dirname, 'src/renderer/panel.html'),
+          dialogue: resolve(__dirname, 'src/renderer/dialogue.html')
         }
       }
     },

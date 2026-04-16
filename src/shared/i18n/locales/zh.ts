@@ -66,6 +66,7 @@ export const zh: Locale = {
 
   // Debug
   debugOverlay: '调试信息',
+  testDialogue: '测试对话',
 
   // Language
   language: '语言',
