@@ -12,6 +12,7 @@ export class DialogueManager {
   private petWindow: BrowserWindow
   private autoCloseTimer: ReturnType<typeof setTimeout> | null = null
   private hideTimer: ReturnType<typeof setTimeout> | null = null
+  private visible = false
 
   constructor(dialogueWindow: BrowserWindow, petWindow: BrowserWindow) {
     this.dialogueWindow = dialogueWindow
@@ -52,6 +53,7 @@ export class DialogueManager {
 
     this.dialogueWindow.show()
     this.dialogueWindow.setAlwaysOnTop(true, 'screen-saver')
+    this.visible = true
 
     // Auto-close after delay
     this.autoCloseTimer = setTimeout(() => {
@@ -68,7 +70,28 @@ export class DialogueManager {
     this.hideTimer = setTimeout(() => {
       this.dialogueWindow.hide()
       this.hideTimer = null
+      this.visible = false
     }, FADE_OUT_MS)
+  }
+
+  updatePosition(): void {
+    if (!this.visible) return
+
+    const [petX, petY] = this.petWindow.getPosition()
+    const { workArea } = screen.getPrimaryDisplay()
+
+    let x = petX + 64 - Math.floor(DIALOGUE_WIDTH / 2)
+    let y = petY - DIALOGUE_HEIGHT - 8
+
+    x = Math.max(workArea.x, Math.min(x, workArea.x + workArea.width - DIALOGUE_WIDTH))
+    y = Math.max(workArea.y, Math.min(y, workArea.y + workArea.height - DIALOGUE_HEIGHT))
+
+    this.dialogueWindow.setBounds({
+      x,
+      y,
+      width: DIALOGUE_WIDTH,
+      height: DIALOGUE_HEIGHT
+    })
   }
 
   private clearTimers(): void {

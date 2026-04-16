@@ -436,6 +436,7 @@ function setupIpcHandlers(): void {
     const clampedX = Math.max(workArea.x, Math.min(Math.round(x), workArea.x + workArea.width - 128))
     const clampedY = Math.max(workArea.y, Math.min(Math.round(y), workArea.y + workArea.height - 128))
     petWindow.setBounds({ x: clampedX, y: clampedY, width: 128, height: 128 })
+    dialogueManager.updatePosition()
   })
 
   // Click-through control
@@ -448,6 +449,7 @@ function setupIpcHandlers(): void {
     if (!petWindow) return
     const [x, y] = petWindow.getPosition()
     petWindow.setBounds({ x: x + dx, y: y + dy, width: 128, height: 128 })
+    dialogueManager.updatePosition()
   })
 
   // Update hit regions (for Windows click-through polling)
