@@ -66,6 +66,49 @@
         { "emotion": "Normal", "text": "" },
         { "emotion": "Determined", "text": "" }
       ]
+    },
+    "eevee": {
+      "idle": [
+        { "emotion": "Happy", "text": "布伊~" },
+        { "emotion": "Joyous", "text": "伊布伊！" },
+        { "emotion": "Normal", "text": "布咿？" }
+      ],
+      "greeting": [
+        { "emotion": "Joyous", "text": "伊布伊！{name}很高兴见到你！" },
+        { "emotion": "Happy", "text": "布伊~早上好！" }
+      ],
+      "levelup": [
+        { "emotion": "Joyous", "text": "伊布！{name}变强了！" },
+        { "emotion": "Determined", "text": "布伊！还要更强！" }
+      ],
+      "evolve": [
+        { "emotion": "Surprised", "text": "伊...伊布的身体在发光！" },
+        { "emotion": "Determined", "text": "{name}进化了！感觉充满力量！" }
+      ],
+      "feed": [
+        { "emotion": "Joyous", "text": "布伊~好好吃！" },
+        { "emotion": "Happy", "text": "谢谢！{name}最喜欢吃东西了！" }
+      ],
+      "drag": [
+        { "emotion": "Surprised", "text": "布伊！？" },
+        { "emotion": "Dizzy", "text": "伊布...头晕晕的..." }
+      ],
+      "fall": [
+        { "emotion": "Pain", "text": "伊布...好痛..." },
+        { "emotion": "Stunned", "text": "伊...伊布没事..." }
+      ],
+      "fatigue": [
+        { "emotion": "Worried", "text": "布伊...你工作太久了，休息一下吧？" },
+        { "emotion": "Sad", "text": "伊布担心你的身体..." }
+      ],
+      "dailyReward": [
+        { "emotion": "Joyous", "text": "布伊！{name}找到好东西了！" },
+        { "emotion": "Happy", "text": "今天的礼物~收好哦！" }
+      ],
+      "longIdle": [
+        { "emotion": "Sad", "text": "布伊...你忘记{name}了吗？" },
+        { "emotion": "Worried", "text": "伊布好无聊...陪我玩嘛..." }
+      ]
     }
   }
 }

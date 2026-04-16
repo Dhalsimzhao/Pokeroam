@@ -11,11 +11,14 @@ export function DialogueBubble({ portraitSrc, emotion, text }: DialogueBubblePro
         display: 'flex',
         alignItems: 'center',
         gap: 8,
-        padding: '8px 12px',
-        background: 'rgba(0, 0, 0, 0.75)',
-        borderRadius: 8,
+        padding: '6px 8px',
+        background: '#fff',
         maxWidth: 280,
-        minHeight: 48
+        minHeight: 48,
+        border: '3px solid #222',
+        borderRadius: 4,
+        boxShadow: '4px 4px 0px #888, inset 0 0 0 2px #fff, inset 0 0 0 3px #aaa',
+        imageRendering: 'pixelated'
       }}
     >
       <div
@@ -40,13 +43,14 @@ export function DialogueBubble({ portraitSrc, emotion, text }: DialogueBubblePro
             style={{
               width: 40,
               height: 40,
-              background: 'rgba(255,255,255,0.15)',
-              borderRadius: 4,
+              background: '#e8e8e8',
+              border: '2px solid #aaa',
+              borderRadius: 2,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: 9,
-              color: '#aaa'
+              color: '#666'
             }}
           >
             {emotion}
@@ -55,11 +59,11 @@ export function DialogueBubble({ portraitSrc, emotion, text }: DialogueBubblePro
       </div>
       <div
         style={{
-          color: '#fff',
+          color: '#222',
           fontSize: 13,
           lineHeight: 1.4,
           wordBreak: 'break-word',
-          fontFamily: 'sans-serif'
+          fontFamily: '"MS Gothic", "ＭＳ ゴシック", monospace'
         }}
       >
         {text || '...'}
