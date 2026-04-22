@@ -4,6 +4,9 @@ import type { PetAnimState } from '../../../shared/types'
 const WALK_SPEED = 1.5 // pixels per frame
 const GRAVITY = 0.5 // pixels per frame²
 const WINDOW_SIZE = 128
+// Roam radius from the anchor point, as a fraction of screen width.
+// Total active range = 2 * ROAM_RADIUS_RATIO (= 1/4 of screen width).
+const ROAM_RADIUS_RATIO = 1 / 8
 
 export interface PhysicsState {
   x: number
@@ -29,6 +32,16 @@ function randomBetween(min: number, max: number): number {
   return min + Math.random() * (max - min)
 }
 
+function clampAnchorX(centerX: number, wa: { x: number; width: number }): number {
+  const roamRadius = wa.width * ROAM_RADIUS_RATIO
+  const minAnchor = wa.x + roamRadius
+  const maxAnchor = wa.x + wa.width - roamRadius
+  if (minAnchor > maxAnchor) return wa.x + wa.width / 2
+  if (centerX < minAnchor) return minAnchor
+  if (centerX > maxAnchor) return maxAnchor
+  return centerX
+}
+
 export function usePetPhysics(): PhysicsAPI {
   const [animState, setAnimState] = useState<PetAnimState>('idle')
   const [facingLeft, setFacingLeft] = useState(false)
@@ -45,6 +58,9 @@ export function usePetPhysics(): PhysicsAPI {
   const workAreaRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null)
   const draggingRef = useRef(false)
   const nextActionRef = useRef(0)
+  // Anchor x (pet center) of the current roam area. Clamped so the roam range
+  // never extends past the screen edges.
+  const anchorXRef = useRef<number | null>(null)
 
   useEffect(() => {
     let rafId: number
@@ -66,8 +82,10 @@ export function usePetPhysics(): PhysicsAPI {
     }
 
     const clampToBounds = (s: PhysicsState, wa: { x: number; y: number; width: number; height: number }): void => {
-      const minX = wa.x
-      const maxX = wa.x + wa.width - WINDOW_SIZE
+      const anchor = anchorXRef.current ?? wa.x + wa.width / 2
+      const roamRadius = wa.width * ROAM_RADIUS_RATIO
+      const minX = anchor - roamRadius - WINDOW_SIZE / 2
+      const maxX = anchor + roamRadius - WINDOW_SIZE / 2
       if (s.x < minX) {
         s.x = minX
         s.vx = WALK_SPEED
@@ -93,6 +111,9 @@ export function usePetPhysics(): PhysicsAPI {
       if (frameCount % 120 === 0) {
         window.api.getWorkArea().then((freshWa) => {
           workAreaRef.current = freshWa
+          if (anchorXRef.current !== null) {
+            anchorXRef.current = clampAnchorX(anchorXRef.current, freshWa)
+          }
         })
       }
 
@@ -140,6 +161,7 @@ export function usePetPhysics(): PhysicsAPI {
       const s = stateRef.current
       s.x = wa.x + wa.width - WINDOW_SIZE - 20
       s.y = wa.y + wa.height - WINDOW_SIZE
+      anchorXRef.current = clampAnchorX(s.x + WINDOW_SIZE / 2, wa)
       window.api.setPetPosition(s.x, s.y)
       pickNextAction()
       rafId = requestAnimationFrame(tick)
@@ -174,6 +196,10 @@ export function usePetPhysics(): PhysicsAPI {
       const maxX = freshWa.x + freshWa.width - WINDOW_SIZE
       if (s.x < minX) s.x = minX
       if (s.x > maxX) s.x = maxX
+
+      // Re-anchor the roam area around the release position, clamped so the
+      // ±1/8-width range never extends past the screen edges.
+      anchorXRef.current = clampAnchorX(s.x + WINDOW_SIZE / 2, freshWa)
 
       s.grounded = s.y >= groundY
       if (!s.grounded) {
