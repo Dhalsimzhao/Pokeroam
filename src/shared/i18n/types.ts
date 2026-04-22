@@ -68,6 +68,22 @@ export interface Locale {
   debugOverlay: string
   testDialogue: string
 
+  // Debug Panel
+  debugPanel: string
+  debugTabPokemon: string
+  debugTabBackpack: string
+  debugAddPokemon: string
+  debugAddItem: string
+  debugLevel: string
+  debugHeldItem: string
+  debugHeldItemNone: string
+  debugRemove: string
+  debugEditPokemon: string
+  debugConfirm: string
+  debugCancel: string
+  debugQuantity: string
+  debugUnsavedChanges: string
+
   // Language
   language: string
   langZh: string

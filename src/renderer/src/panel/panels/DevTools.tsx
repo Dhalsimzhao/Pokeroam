@@ -1,305 +1,9 @@
-# !!!EXECUTION!!!
-
-# UPDATES
-
-# AFFECTED PROJECTS
-
-- Typecheck: `pnpm typecheck`
-- Unit tests: `pnpm test` (no new tests — UI/IPC plumbing only)
-- Manual test: `pnpm dev`, then use tray → "调试面板 / Debug Panel" (dev only) to:
-  - Open panel, switch between 宝可梦 / 背包 tabs.
-  - Add/remove pokemon; click a pokemon to edit level + held item.
-  - Add/remove backpack items; change quantities.
-  - Cancel: no changes persisted. Confirm: save.json updated, pet window reflects new active pokemon / level.
-- Production guard: `pnpm build` then launch the built app, verify the tray item is **not** present.
-
-# EXECUTION PLAN
-
-## Step 1. Add i18n strings [DONE]
-
-### 1a. Extend `Locale` interface
-
-**File**: `src/shared/i18n/types.ts`
-
-Append the following fields inside the `Locale` interface (after the existing `testDialogue` line in the `// Debug` block):
-
-```typescript
-  // Debug Panel
-  debugPanel: string
-  debugTabPokemon: string
-  debugTabBackpack: string
-  debugAddPokemon: string
-  debugAddItem: string
-  debugLevel: string
-  debugHeldItem: string
-  debugHeldItemNone: string
-  debugRemove: string
-  debugEditPokemon: string
-  debugConfirm: string
-  debugCancel: string
-  debugQuantity: string
-  debugUnsavedChanges: string
-```
-
-### 1b. Chinese locale
-
-**File**: `src/shared/i18n/locales/zh.ts`
-
-Append inside the object literal, just before the closing brace of the `// Debug` section (after `testDialogue: '测试对话',`):
-
-```typescript
-  debugPanel: '调试面板',
-  debugTabPokemon: '宝可梦',
-  debugTabBackpack: '背包',
-  debugAddPokemon: '添加宝可梦',
-  debugAddItem: '添加道具',
-  debugLevel: '等级',
-  debugHeldItem: '持有道具',
-  debugHeldItemNone: '无',
-  debugRemove: '删除',
-  debugEditPokemon: '编辑宝可梦',
-  debugConfirm: '确认',
-  debugCancel: '取消',
-  debugQuantity: '数量',
-  debugUnsavedChanges: '有未保存的改动',
-```
-
-### 1c. English locale
-
-**File**: `src/shared/i18n/locales/en.ts`
-
-Append in the matching location:
-
-```typescript
-  debugPanel: 'Debug Panel',
-  debugTabPokemon: 'Pokemon',
-  debugTabBackpack: 'Backpack',
-  debugAddPokemon: 'Add Pokemon',
-  debugAddItem: 'Add Item',
-  debugLevel: 'Level',
-  debugHeldItem: 'Held Item',
-  debugHeldItemNone: 'None',
-  debugRemove: 'Remove',
-  debugEditPokemon: 'Edit Pokemon',
-  debugConfirm: 'Confirm',
-  debugCancel: 'Cancel',
-  debugQuantity: 'Quantity',
-  debugUnsavedChanges: 'Unsaved changes',
-```
-
-## Step 2. Add new IPC contract [DONE]
-
-### 2a. Preload bridge
-
-**File**: `src/preload/index.ts`
-
-Inside the `contextBridge.exposeInMainWorld('api', { ... })` object, add these entries (group with panel commands):
-
-```typescript
-  // Debug panel
-  onPanelNavigate: (cb: Callback<string>) => onIpc('panel-navigate', cb),
-  applyDebugSaveData: (data: unknown) => ipcRenderer.invoke('debug-apply-save-data', data),
-  isDevMode: () => ipcRenderer.invoke('is-dev-mode'),
-```
-
-### 2b. Type declarations
-
-**File**: `src/renderer/src/env.d.ts`
-
-Add inside the `ElectronAPI` interface (after `onLocaleChanged`):
-
-```typescript
-  // Debug panel
-  onPanelNavigate: (cb: (view: string) => void) => () => void
-  applyDebugSaveData: (data: unknown) => Promise<boolean>
-  isDevMode: () => Promise<boolean>
-```
-
-## Step 3. Main process — dev flag, IPC handler, tray entry [DONE]
-
-### 3a. Import `is` and tray option
-
-**File**: `src/main/index.ts`
-
-At the top of the file, where `'../shared/...'` imports live, add:
-
-```typescript
-import { is } from '@electron-toolkit/utils'
-```
-
-(There should already be an `@electron-toolkit/utils` import in other window files — this brings the same helper into `index.ts`.)
-
-### 3b. Pass `isDev` + `onOpenDebugPanel` into tray
-
-**File**: `src/main/index.ts`
-
-In `rebuildTray()`, extend the options object passed to `buildTrayMenu`:
-
-```typescript
-function rebuildTray(): void {
-  if (_tray && panelWindow) {
-    buildTrayMenu(_tray, panelWindow, currentLang, handleLangChange, {
-      debugEnabled,
-      onDebugToggle: handleDebugToggle,
-      onTestDialogue: (eventType: string) => {
-        if (!saveData?.activePokemonId) return
-        const pokemon = saveData.pokemon.find((p) => p.id === saveData!.activePokemonId)
-        if (!pokemon) return
-        const species = getSpeciesById(pokemon.speciesId)
-        if (!species) return
-        dialogueManager.showDialogue(species.name, eventType as DialogueEventType)
-      },
-      isDev: is.dev,
-      onOpenDebugPanel: () => {
-        if (!panelWindow) return
-        panelWindow.show()
-        panelWindow.focus()
-        panelWindow.webContents.send('panel-navigate', 'debug')
-      }
-    })
-  }
-}
-```
-
-### 3c. Register IPC handlers
-
-**File**: `src/main/index.ts`
-
-Inside `setupIpcHandlers()`, at the end of the function (after the `pet-landed` handler) add:
-
-```typescript
-  // Dev-mode probe for renderer
-  ipcMain.handle('is-dev-mode', () => is.dev)
-
-  // Debug panel: atomically replace save data
-  ipcMain.handle('debug-apply-save-data', (_e, incoming: SaveData) => {
-    if (!is.dev) return false
-    if (!incoming || typeof incoming !== 'object') return false
-
-    // Sanity-fix activePokemonId — if it no longer refers to an owned pokemon, clear it.
-    const ids = new Set(incoming.pokemon.map((p) => p.id))
-    if (incoming.activePokemonId && !ids.has(incoming.activePokemonId)) {
-      incoming.activePokemonId = null
-    }
-
-    // Keep pokedex consistent with current pokemon list.
-    for (const p of incoming.pokemon) {
-      if (!incoming.pokedex.includes(p.speciesId)) {
-        incoming.pokedex.push(p.speciesId)
-      }
-    }
-
-    saveData = incoming
-    saveManager.save(saveData)
-    broadcastSaveData()
-    return true
-  })
-```
-
-**Why `is.dev` guard in the handler**: the tray entry is the primary gate, but a second gate at the IPC boundary prevents accidental use from any leftover renderer code in a production build.
-
-### 3d. Interaction tracking on debug apply
-
-The existing `broadcastSaveData()` call already refreshes the panel and pet window; no additional wiring is required.
-
-## Step 4. Tray menu — dev-only debug panel entry [DONE]
-
-**File**: `src/main/tray-manager.ts`
-
-### 4a. Extend the `options` parameter
-
-Update the `options?: { ... }` type on `buildTrayMenu`:
-
-```typescript
-export function buildTrayMenu(
-  tray: Tray,
-  panelWindow: BrowserWindow,
-  lang: LangCode,
-  onLangChange: (lang: LangCode) => void,
-  options?: {
-    debugEnabled?: boolean
-    onDebugToggle?: (enabled: boolean) => void
-    onTestDialogue?: (eventType: string) => void
-    isDev?: boolean
-    onOpenDebugPanel?: () => void
-  }
-): void {
-```
-
-### 4b. Insert the menu entry
-
-Inside the `Menu.buildFromTemplate([ ... ])` call, add a conditional item **right after** the existing `testDialogue` submenu block (still inside the template array):
-
-```typescript
-    ...(options?.isDev && options?.onOpenDebugPanel
-      ? [
-          {
-            label: t.debugPanel,
-            click: () => options.onOpenDebugPanel!()
-          }
-        ]
-      : []),
-```
-
-The item is gated on `options.isDev` so production builds (where `is.dev === false`) never see it.
-
-## Step 5. Panel — add `debug` view and navigation listener [DONE]
-
-### 5a. Extend `PanelView`
-
-**File**: `src/renderer/src/panel/bedroom/BedroomScene.tsx`
-
-Update the exported type:
-
-```typescript
-export type PanelView = 'bedroom' | 'starter' | 'pc' | 'pokedex' | 'backpack' | 'debug'
-```
-
-### 5b. Register IPC navigation and render DevTools
-
-**File**: `src/renderer/src/panel/App.tsx`
-
-Add an import at the top (just after the `Backpack` import):
-
-```typescript
-import { DevTools } from './panels/DevTools'
-```
-
-Add an IPC listener effect below the existing `onSaveDataChanged` effect:
-
-```typescript
-  // Listen for main-process navigation requests (tray → debug panel)
-  useEffect(() => {
-    const unsub = window.api.onPanelNavigate((target) => {
-      if (target === 'debug' || target === 'bedroom' || target === 'pc' ||
-          target === 'pokedex' || target === 'backpack' || target === 'starter') {
-        setView(target as PanelView)
-      }
-    })
-    return unsub
-  }, [])
-```
-
-Add a case to the `switch (view)` block, just before `default`:
-
-```typescript
-    case 'debug':
-      return saveData
-        ? <DevTools saveData={saveData} onBack={goBack} />
-        : renderPlaceholder('Debug')
-```
-
-## Step 6. Create the DevTools panel component [DONE]
-
-**File**: `src/renderer/src/panel/panels/DevTools.tsx` (new file)
-
-```typescript
 import { useState } from 'react'
 import type { SaveData, OwnedPokemon, BackpackItem, ItemDefinition } from '../../../../shared/types'
 import { POKEMON_SPECIES, getSpeciesById, getExpForLevel } from '../../../../shared/pokemon-data'
 import { ITEMS, getItemById } from '../../../../shared/item-data'
 import { MAX_LEVEL } from '../../../../shared/constants'
-import { localeName } from '../../../../shared/i18n'
+import { localeName, type LangCode, type Locale } from '../../../../shared/i18n'
 import { useI18n } from '../../shared/i18n'
 
 type Tab = 'pokemon' | 'backpack'
@@ -474,7 +178,7 @@ export function DevTools({ saveData, onBack }: Props): JSX.Element {
 
 interface PokemonTabProps {
   draft: SaveData
-  lang: 'zh' | 'en'
+  lang: LangCode
   editing: OwnedPokemon | null
   holdableItems: ItemDefinition[]
   onAdd: (speciesId: number) => void
@@ -482,7 +186,7 @@ interface PokemonTabProps {
   onEdit: (id: string | null) => void
   onUpdate: (id: string, patch: Partial<OwnedPokemon>) => void
   onCloseEdit: () => void
-  t: ReturnType<typeof useI18n>['t']
+  t: Locale
 }
 
 function PokemonTab(p: PokemonTabProps): JSX.Element {
@@ -604,11 +308,11 @@ function PokemonTab(p: PokemonTabProps): JSX.Element {
 
 interface BackpackTabProps {
   draft: SaveData
-  lang: 'zh' | 'en'
+  lang: LangCode
   onAdd: (itemId: string) => void
   onRemove: (itemId: string) => void
   onSetQuantity: (itemId: string, qty: number) => void
-  t: ReturnType<typeof useI18n>['t']
+  t: Locale
 }
 
 function BackpackTab(p: BackpackTabProps): JSX.Element {
@@ -708,27 +412,3 @@ const selectStyle: React.CSSProperties = {
   padding: '4px 8px', fontSize: 12, border: '1px solid #ccc',
   borderRadius: 4, background: '#fff'
 }
-```
-
-**Key design notes**:
-- The draft is a deep JSON clone of `saveData`. Edits mutate only the local draft; `onConfirm` calls `applyDebugSaveData` to push atomically, `onCancel` discards.
-- `cloneSave` uses `JSON.parse(JSON.stringify(...))` because `SaveData` is plain JSON (no dates, functions, Maps) — matches what SaveManager already serializes.
-- Editing a level also re-sets `exp` via `getExpForLevel`, keeping XP-vs-level monotonic (otherwise pet-level-up callbacks could misfire when the player gains XP after the debug edit).
-- `crypto.randomUUID()` is used in the renderer — available in Electron's Chromium runtime without polyfill.
-- The `PokemonTab`/`BackpackTab` are split into sub-components purely for readability; all state stays in the parent so Cancel can truly roll everything back.
-- When removing the currently active pokemon, the draft clears `activePokemonId` so the pet window will hide after Confirm (the main-side handler also double-checks this).
-
-## Step 7. Verification
-
-1. `pnpm typecheck` — must pass.
-2. `pnpm dev` — launch; open tray, click "调试面板 / Debug Panel":
-   - Pokemon tab: add Charmander, set its level to 50, held item = Exp. Share → Confirm → Pokemon PC should show the new entry.
-   - Edit the active pokemon's level; after Confirm the pet window must receive the new level via `sendPetState`.
-   - Cancel path: make several edits, press Cancel → open again, draft starts fresh (no persistence).
-   - Backpack tab: add a Rare Candy, bump quantity to 5, Confirm → Backpack panel shows ×5.
-   - Remove the active pokemon → Confirm → pet window hides (activePokemonId nulled).
-3. Production guard: `pnpm build && pnpm pack`, run the packaged binary, confirm no "Debug Panel" menu item.
-
-# !!!FINISHED!!!
-
-# !!!VERIFIED!!!

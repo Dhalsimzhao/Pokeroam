@@ -24,6 +24,8 @@ export function buildTrayMenu(
     debugEnabled?: boolean
     onDebugToggle?: (enabled: boolean) => void
     onTestDialogue?: (eventType: string) => void
+    isDev?: boolean
+    onOpenDebugPanel?: () => void
   }
 ): void {
   const t = getLocale(lang)
@@ -63,6 +65,14 @@ export function buildTrayMenu(
               label: eventType,
               click: () => options.onTestDialogue!(eventType)
             }))
+          }
+        ]
+      : []),
+    ...(options?.isDev && options?.onOpenDebugPanel
+      ? [
+          {
+            label: t.debugPanel,
+            click: () => options.onOpenDebugPanel!()
           }
         ]
       : []),

@@ -81,5 +81,10 @@ contextBridge.exposeInMainWorld('api', {
   onDialogueHide: (cb: Callback) => onIpc('dialogue-hide', cb),
 
   // Debug
-  onToggleDebug: (cb: Callback<boolean>) => onIpc('toggle-debug', cb)
+  onToggleDebug: (cb: Callback<boolean>) => onIpc('toggle-debug', cb),
+
+  // Debug panel
+  onPanelNavigate: (cb: Callback<string>) => onIpc('panel-navigate', cb),
+  applyDebugSaveData: (data: unknown) => ipcRenderer.invoke('debug-apply-save-data', data),
+  isDevMode: () => ipcRenderer.invoke('is-dev-mode')
 })

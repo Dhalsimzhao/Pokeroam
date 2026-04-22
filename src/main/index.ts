@@ -9,7 +9,7 @@ import { KeyboardMonitor } from './keyboard-monitor'
 import { FatigueDetector } from './fatigue-detector'
 import { DailyRewardManager } from './daily-reward'
 import { DialogueManager } from './dialogue-manager'
-import type { DialogueEventType, SaveData } from '../shared/types'
+import type { DialogueEventType, OwnedPokemon, SaveData } from '../shared/types'
 import { POKEMON_SPECIES, getSpeciesById, getExpForLevel } from '../shared/pokemon-data'
 import { getItemById } from '../shared/item-data'
 import {
@@ -20,6 +20,7 @@ import {
   GREETING_DELAY_MS
 } from '../shared/constants'
 import { getLocale, localeName, type LangCode } from '../shared/i18n'
+import { is } from '@electron-toolkit/utils'
 
 let petWindow: BrowserWindow | null = null
 let panelWindow: BrowserWindow | null = null
@@ -49,6 +50,13 @@ function rebuildTray(): void {
         const species = getSpeciesById(pokemon.speciesId)
         if (!species) return
         dialogueManager.showDialogue(species.name, eventType as DialogueEventType)
+      },
+      isDev: is.dev,
+      onOpenDebugPanel: () => {
+        if (!panelWindow) return
+        panelWindow.show()
+        panelWindow.focus()
+        panelWindow.webContents.send('panel-navigate', 'debug')
       }
     })
   }
@@ -78,6 +86,25 @@ function getActiveSpeciesName(): string | null {
 function onUserInteraction(): void {
   lastInteractionTime = Date.now()
   longIdleTriggered = false
+}
+
+/** Walk a pokemon up its level-evolution chain as far as its current level allows. */
+function cascadeLevelEvolution(pokemon: OwnedPokemon, pokedex: number[]): void {
+  // Guard against pathological data (cycles / > chain length); chains in this
+  // project are at most 3 stages, so 10 is plenty.
+  for (let i = 0; i < 10; i++) {
+    const next = POKEMON_SPECIES.find(
+      (s) =>
+        s.evolvesFrom === pokemon.speciesId &&
+        s.evolutionLevel !== null &&
+        s.evolutionItem === null &&
+        pokemon.level >= s.evolutionLevel
+    )
+    if (!next) return
+    pokemon.speciesId = next.id
+    if (!pokedex.includes(next.id)) pokedex.push(next.id)
+    pokemon.exp = getExpForLevel(next.expGroup, pokemon.level)
+  }
 }
 
 // Hit regions for Windows click-through polling
@@ -467,6 +494,38 @@ function setupIpcHandlers(): void {
   ipcMain.on('pet-landed', () => {
     const name = getActiveSpeciesName()
     if (name) dialogueManager.showDialogue(name, 'fall')
+  })
+
+  // Dev-mode probe for renderer
+  ipcMain.handle('is-dev-mode', () => is.dev)
+
+  // Debug panel: atomically replace save data
+  ipcMain.handle('debug-apply-save-data', (_e, incoming: SaveData) => {
+    if (!is.dev) return false
+    if (!incoming || typeof incoming !== 'object') return false
+
+    // Cascade level-based evolutions (stone evolutions require manual item use).
+    for (const p of incoming.pokemon) {
+      cascadeLevelEvolution(p, incoming.pokedex)
+    }
+
+    // Sanity-fix activePokemonId — if it no longer refers to an owned pokemon, clear it.
+    const ids = new Set(incoming.pokemon.map((p) => p.id))
+    if (incoming.activePokemonId && !ids.has(incoming.activePokemonId)) {
+      incoming.activePokemonId = null
+    }
+
+    // Keep pokedex consistent with current pokemon list.
+    for (const p of incoming.pokemon) {
+      if (!incoming.pokedex.includes(p.speciesId)) {
+        incoming.pokedex.push(p.speciesId)
+      }
+    }
+
+    saveData = incoming
+    saveManager.save(saveData)
+    broadcastSaveData()
+    return true
   })
 }
 

@@ -46,6 +46,11 @@ interface ElectronAPI {
   onDialogueHide: (cb: (data: unknown) => void) => () => void
 
   onToggleDebug: (cb: (enabled: boolean) => void) => () => void
+
+  // Debug panel
+  onPanelNavigate: (cb: (view: string) => void) => () => void
+  applyDebugSaveData: (data: unknown) => Promise<boolean>
+  isDevMode: () => Promise<boolean>
 }
 
 declare global {

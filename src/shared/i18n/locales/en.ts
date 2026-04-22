@@ -67,6 +67,20 @@ export const en: Locale = {
   // Debug
   debugOverlay: 'Debug Overlay',
   testDialogue: 'Test Dialogue',
+  debugPanel: 'Debug Panel',
+  debugTabPokemon: 'Pokemon',
+  debugTabBackpack: 'Backpack',
+  debugAddPokemon: 'Add Pokemon',
+  debugAddItem: 'Add Item',
+  debugLevel: 'Level',
+  debugHeldItem: 'Held Item',
+  debugHeldItemNone: 'None',
+  debugRemove: 'Remove',
+  debugEditPokemon: 'Edit Pokemon',
+  debugConfirm: 'Confirm',
+  debugCancel: 'Cancel',
+  debugQuantity: 'Quantity',
+  debugUnsavedChanges: 'Unsaved changes',
 
   // Language
   language: 'Language',

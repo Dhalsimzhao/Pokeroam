@@ -67,6 +67,20 @@ export const zh: Locale = {
   // Debug
   debugOverlay: '调试信息',
   testDialogue: '测试对话',
+  debugPanel: '调试面板',
+  debugTabPokemon: '宝可梦',
+  debugTabBackpack: '背包',
+  debugAddPokemon: '添加宝可梦',
+  debugAddItem: '添加道具',
+  debugLevel: '等级',
+  debugHeldItem: '持有道具',
+  debugHeldItemNone: '无',
+  debugRemove: '删除',
+  debugEditPokemon: '编辑宝可梦',
+  debugConfirm: '确认',
+  debugCancel: '取消',
+  debugQuantity: '数量',
+  debugUnsavedChanges: '有未保存的改动',
 
   // Language
   language: '语言',

@@ -9,7 +9,7 @@ import { DeskArea } from './DeskArea'
 import { ChairArea } from './ChairArea'
 import './styles.css'
 
-export type PanelView = 'bedroom' | 'starter' | 'pc' | 'pokedex' | 'backpack'
+export type PanelView = 'bedroom' | 'starter' | 'pc' | 'pokedex' | 'backpack' | 'debug'
 
 interface BedroomSceneProps {
   onNavigate: (view: PanelView) => void

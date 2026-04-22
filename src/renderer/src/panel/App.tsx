@@ -6,6 +6,7 @@ import { StarterSelect } from './starter/StarterSelect'
 import { PokemonPC } from './panels/PokemonPC'
 import { Pokedex } from './panels/Pokedex'
 import { Backpack } from './panels/Backpack'
+import { DevTools } from './panels/DevTools'
 
 export default function App(): JSX.Element {
   const [saveData, setSaveData] = useState<SaveData | null>(null)
@@ -32,6 +33,23 @@ export default function App(): JSX.Element {
     })
     return unsub
   }, [view])
+
+  // Listen for main-process navigation requests (tray → debug panel)
+  useEffect(() => {
+    const unsub = window.api.onPanelNavigate((target) => {
+      if (
+        target === 'debug' ||
+        target === 'bedroom' ||
+        target === 'pc' ||
+        target === 'pokedex' ||
+        target === 'backpack' ||
+        target === 'starter'
+      ) {
+        setView(target as PanelView)
+      }
+    })
+    return unsub
+  }, [])
 
   if (!loaded) return <div />
 
@@ -94,6 +112,10 @@ export default function App(): JSX.Element {
       return saveData
         ? <Backpack saveData={saveData} onBack={goBack} />
         : renderPlaceholder(t.backpack)
+    case 'debug':
+      return saveData
+        ? <DevTools saveData={saveData} onBack={goBack} />
+        : renderPlaceholder('Debug')
     default:
       return renderPlaceholder('PokéRoam')
   }
