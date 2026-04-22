@@ -9,7 +9,8 @@ import { KeyboardMonitor } from './keyboard-monitor'
 import { FatigueDetector } from './fatigue-detector'
 import { DailyRewardManager } from './daily-reward'
 import { DialogueManager } from './dialogue-manager'
-import type { DialogueEventType, OwnedPokemon, SaveData } from '../shared/types'
+import type { DialogueEventType, OwnedPokemon, PetTuning, SaveData } from '../shared/types'
+import { DEFAULT_PET_TUNING } from '../shared/types'
 import { POKEMON_SPECIES, getSpeciesById, getExpForLevel } from '../shared/pokemon-data'
 import { getItemById } from '../shared/item-data'
 import {
@@ -35,6 +36,7 @@ let dialogueManager: DialogueManager
 let saveData: SaveData | null = null
 let currentLang: LangCode = 'zh'
 let debugEnabled = false
+let petTuning: PetTuning = { ...DEFAULT_PET_TUNING }
 let lastInteractionTime = Date.now()
 let longIdleTriggered = false
 
@@ -498,6 +500,42 @@ function setupIpcHandlers(): void {
 
   // Dev-mode probe for renderer
   ipcMain.handle('is-dev-mode', () => is.dev)
+
+  // Live pet-physics tuning (dev only). Not persisted — resets each launch.
+  ipcMain.handle('get-pet-tuning', () => petTuning)
+  ipcMain.handle('set-pet-tuning', (_e, patch: Partial<PetTuning>) => {
+    if (!is.dev) return petTuning
+    if (!patch || typeof patch !== 'object') return petTuning
+    const next: PetTuning = { ...petTuning }
+    if (typeof patch.walkSpeed === 'number' && Number.isFinite(patch.walkSpeed)) {
+      next.walkSpeed = patch.walkSpeed
+    }
+    if (typeof patch.gravity === 'number' && Number.isFinite(patch.gravity)) {
+      next.gravity = patch.gravity
+    }
+    if (typeof patch.animationSpeed === 'number' && Number.isFinite(patch.animationSpeed)) {
+      next.animationSpeed = patch.animationSpeed
+    }
+    if (typeof patch.idleRestTicks === 'number' && Number.isFinite(patch.idleRestTicks)) {
+      next.idleRestTicks = Math.max(1, Math.round(patch.idleRestTicks))
+    }
+    if (typeof patch.idleDipTicks === 'number' && Number.isFinite(patch.idleDipTicks)) {
+      next.idleDipTicks = Math.max(1, Math.round(patch.idleDipTicks))
+    }
+    if ('animOverride' in patch) {
+      const v = patch.animOverride
+      const allowed: ReadonlyArray<string> = [
+        'idle', 'walk', 'sleep', 'happy', 'eat', 'levelup', 'evolve', 'dragging', 'falling'
+      ]
+      next.animOverride = v === null || (typeof v === 'string' && allowed.includes(v))
+        ? (v as PetTuning['animOverride'])
+        : null
+    }
+    petTuning = next
+    petWindow?.webContents.send('pet-tuning-update', petTuning)
+    panelWindow?.webContents.send('pet-tuning-update', petTuning)
+    return petTuning
+  })
 
   // Debug panel: atomically replace save data
   ipcMain.handle('debug-apply-save-data', (_e, incoming: SaveData) => {

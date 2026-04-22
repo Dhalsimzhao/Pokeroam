@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import type { SpriteSheetConfig } from '../../../shared/types'
+import { petTuning } from './pet-tuning'
 
 const TICK_MS = 1000 / 60
 
@@ -24,7 +25,7 @@ export function useAnimationLoop(config: SpriteSheetConfig | null): { frameIndex
       const elapsed = now - lastTime
       lastTime = now
 
-      let ticksToProcess = Math.round(elapsed / TICK_MS)
+      let ticksToProcess = Math.round((elapsed / TICK_MS) * petTuning.animationSpeed)
       while (ticksToProcess > 0) {
         ticksRemaining--
         ticksToProcess--

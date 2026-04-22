@@ -1,12 +1,29 @@
-import { useState } from 'react'
-import type { SaveData, OwnedPokemon, BackpackItem, ItemDefinition } from '../../../../shared/types'
+import { useEffect, useMemo, useState } from 'react'
+import type {
+  SaveData,
+  OwnedPokemon,
+  BackpackItem,
+  ItemDefinition,
+  PetAnimState,
+  PetTuning,
+  SpriteSheetConfig
+} from '../../../../shared/types'
+import { DEFAULT_PET_TUNING } from '../../../../shared/types'
 import { POKEMON_SPECIES, getSpeciesById, getExpForLevel } from '../../../../shared/pokemon-data'
 import { ITEMS, getItemById } from '../../../../shared/item-data'
 import { MAX_LEVEL } from '../../../../shared/constants'
 import { localeName, type LangCode, type Locale } from '../../../../shared/i18n'
 import { useI18n } from '../../shared/i18n'
+import { getSpriteConfig } from '../../shared/sprite-config'
+import { SpriteCanvas } from '../../pet/SpriteCanvas'
+import { useAnimationLoop } from '../../pet/useAnimationLoop'
+import { initPetTuning } from '../../pet/pet-tuning'
 
-type Tab = 'pokemon' | 'backpack'
+type Tab = 'pokemon' | 'backpack' | 'tuning' | 'anim'
+
+const ANIM_STATES: PetAnimState[] = [
+  'idle', 'walk', 'sleep', 'happy', 'eat', 'levelup', 'evolve', 'dragging', 'falling'
+]
 
 interface Props {
   saveData: SaveData
@@ -108,7 +125,7 @@ export function DevTools({ saveData, onBack }: Props): JSX.Element {
 
   return (
     <div style={{
-      width: 800, height: 600, background: '#f5e6d3',
+      width: 1100, height: 720, background: '#f5e6d3',
       display: 'flex', flexDirection: 'column',
       fontFamily: "'Segoe UI', system-ui, sans-serif"
     }}>
@@ -125,6 +142,12 @@ export function DevTools({ saveData, onBack }: Props): JSX.Element {
           </TabBtn>
           <TabBtn active={tab === 'backpack'} onClick={() => setTab('backpack')}>
             {t.debugTabBackpack}
+          </TabBtn>
+          <TabBtn active={tab === 'tuning'} onClick={() => setTab('tuning')}>
+            {t.debugTabTuning}
+          </TabBtn>
+          <TabBtn active={tab === 'anim'} onClick={() => setTab('anim')}>
+            {t.debugTabAnim}
           </TabBtn>
         </div>
         {dirty && (
@@ -160,6 +183,8 @@ export function DevTools({ saveData, onBack }: Props): JSX.Element {
             t={t}
           />
         )}
+        {tab === 'tuning' && <TuningTab t={t} />}
+        {tab === 'anim' && <AnimationTab lang={lang} t={t} saveData={saveData} />}
       </div>
 
       {/* Footer */}
@@ -377,6 +402,286 @@ function BackpackTab(p: BackpackTabProps): JSX.Element {
           </div>
         )
       })}
+    </div>
+  )
+}
+
+// ==================== Tuning tab ====================
+
+type NumericTuningKey = {
+  [K in keyof PetTuning]: PetTuning[K] extends number ? K : never
+}[keyof PetTuning]
+
+interface TuningParamSpec {
+  key: NumericTuningKey
+  label: string
+  min: number
+  max: number
+  step: number
+}
+
+function TuningTab({ t }: { t: Locale }): JSX.Element {
+  const [tuning, setTuning] = useState<PetTuning>(DEFAULT_PET_TUNING)
+
+  useEffect(() => {
+    window.api.getPetTuning().then(setTuning)
+    return window.api.onPetTuningUpdate(setTuning)
+  }, [])
+
+  const apply = (patch: Partial<PetTuning>): void => {
+    // Optimistic local update so the slider feels responsive; the main process
+    // will echo back via onPetTuningUpdate.
+    setTuning((prev) => ({ ...prev, ...patch }))
+    window.api.setPetTuning(patch)
+  }
+
+  const numericSpecs: TuningParamSpec[] = [
+    { key: 'walkSpeed', label: t.debugTuningWalkSpeed, min: 0.1, max: 3.0, step: 0.1 },
+    { key: 'gravity', label: t.debugTuningGravity, min: 0.1, max: 2.0, step: 0.1 }
+  ]
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 520 }}>
+      <div style={{ fontSize: 11, color: '#7d6b4f' }}>{t.debugTuningHint}</div>
+
+      {numericSpecs.map((spec) => (
+        <TuningSlider
+          key={spec.key}
+          label={spec.label}
+          value={tuning[spec.key] as number}
+          defaultValue={DEFAULT_PET_TUNING[spec.key] as number}
+          min={spec.min}
+          max={spec.max}
+          step={spec.step}
+          onChange={(v) => apply({ [spec.key]: v } as Partial<PetTuning>)}
+        />
+      ))}
+
+      <button
+        onClick={() => apply({ walkSpeed: DEFAULT_PET_TUNING.walkSpeed, gravity: DEFAULT_PET_TUNING.gravity })}
+        style={{ ...btnStyle('#7f8c8d'), alignSelf: 'flex-start' }}
+      >
+        {t.debugTuningReset}
+      </button>
+    </div>
+  )
+}
+
+interface TuningSliderProps {
+  label: string
+  value: number
+  defaultValue: number
+  min: number
+  max: number
+  step: number
+  onChange: (v: number) => void
+}
+
+function TuningSlider(p: TuningSliderProps): JSX.Element {
+  const clamp = (n: number): number => Math.max(p.min, Math.min(p.max, n))
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#5d4e37' }}>
+        <span style={{ flex: 1, fontWeight: 600 }}>{p.label}</span>
+        <input
+          type="number"
+          min={p.min}
+          max={p.max}
+          step={p.step}
+          value={p.value}
+          onChange={(e) => {
+            const v = Number(e.target.value)
+            if (Number.isFinite(v)) p.onChange(clamp(v))
+          }}
+          style={{ ...selectStyle, width: 80 }}
+        />
+        <span style={{ fontSize: 10, color: '#a08b6a', minWidth: 70, textAlign: 'right' }}>
+          default {p.defaultValue}
+        </span>
+      </div>
+      <input
+        type="range"
+        min={p.min}
+        max={p.max}
+        step={p.step}
+        value={p.value}
+        onChange={(e) => p.onChange(Number(e.target.value))}
+        style={{ width: '100%' }}
+      />
+    </div>
+  )
+}
+
+// ==================== Animation preview tab ====================
+
+interface AnimationTabProps {
+  lang: LangCode
+  t: Locale
+  saveData: SaveData
+}
+
+function AnimationTab({ lang, t, saveData }: AnimationTabProps): JSX.Element {
+  const activeSpeciesId =
+    saveData.pokemon.find((p) => p.id === saveData.activePokemonId)?.speciesId
+    ?? POKEMON_SPECIES[0].id
+  const [speciesId, setSpeciesId] = useState<number>(activeSpeciesId)
+  const [tuning, setTuning] = useState<PetTuning>(DEFAULT_PET_TUNING)
+
+  // Keep both the React state (for re-rendering previews when sliders move)
+  // and the pet-tuning module singleton (which useAnimationLoop reads) in sync.
+  // initPetTuning wires the singleton; the setTuning subscription drives renders.
+  useEffect(() => {
+    const unsub = initPetTuning()
+    window.api.getPetTuning().then(setTuning)
+    const unsub2 = window.api.onPetTuningUpdate(setTuning)
+    return () => {
+      unsub()
+      unsub2()
+    }
+  }, [])
+
+  const apply = (patch: Partial<PetTuning>): void => {
+    setTuning((prev) => ({ ...prev, ...patch }))
+    window.api.setPetTuning(patch)
+  }
+
+  const animSpecs: TuningParamSpec[] = [
+    { key: 'animationSpeed', label: t.debugTuningAnimationSpeed, min: 0.1, max: 3.0, step: 0.1 },
+    { key: 'idleRestTicks', label: t.debugTuningIdleRest, min: 1, max: 300, step: 1 },
+    { key: 'idleDipTicks', label: t.debugTuningIdleDip, min: 1, max: 60, step: 1 }
+  ]
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <span style={{ fontSize: 12, color: '#5d4e37', fontWeight: 600 }}>
+          {t.debugAnimSpecies}
+        </span>
+        <select
+          value={speciesId}
+          onChange={(e) => setSpeciesId(Number(e.target.value))}
+          style={selectStyle}
+        >
+          {POKEMON_SPECIES.map((s) => (
+            <option key={s.id} value={s.id}>
+              #{s.id} {localeName(s.nameZh, s.name, lang)}
+            </option>
+          ))}
+        </select>
+        <span style={{ fontSize: 11, color: '#7d6b4f', marginLeft: 'auto' }}>
+          {t.debugAnimHint}
+        </span>
+      </div>
+
+      <div style={{
+        display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, maxWidth: 640
+      }}>
+        {animSpecs.map((spec) => (
+          <TuningSlider
+            key={spec.key}
+            label={spec.label}
+            value={tuning[spec.key] as number}
+            defaultValue={DEFAULT_PET_TUNING[spec.key] as number}
+            min={spec.min}
+            max={spec.max}
+            step={spec.step}
+            onChange={(v) => apply({ [spec.key]: v } as Partial<PetTuning>)}
+          />
+        ))}
+      </div>
+
+      <button
+        onClick={() =>
+          apply({
+            animationSpeed: DEFAULT_PET_TUNING.animationSpeed,
+            idleRestTicks: DEFAULT_PET_TUNING.idleRestTicks,
+            idleDipTicks: DEFAULT_PET_TUNING.idleDipTicks
+          })
+        }
+        style={{ ...btnStyle('#7f8c8d'), alignSelf: 'flex-start' }}
+      >
+        {t.debugTuningReset}
+      </button>
+
+      <div style={{ height: 1, background: '#d4b896', margin: '4px 0' }} />
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
+        gap: 12
+      }}>
+        {ANIM_STATES.map((state) => (
+          <AnimPreviewCard
+            key={state}
+            speciesId={speciesId}
+            animState={state}
+            idleRest={tuning.idleRestTicks}
+            idleDip={tuning.idleDipTicks}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+interface AnimPreviewCardProps {
+  speciesId: number
+  animState: PetAnimState
+  idleRest: number
+  idleDip: number
+}
+
+function AnimPreviewCard({
+  speciesId, animState, idleRest, idleDip
+}: AnimPreviewCardProps): JSX.Element {
+  const config = useMemo<SpriteSheetConfig | null>(
+    () => getSpriteConfig(speciesId, animState, { rest: idleRest, dip: idleDip }),
+    [speciesId, animState, idleRest, idleDip]
+  )
+  const { frameIndex } = useAnimationLoop(config)
+
+  // Cards have a fixed body so varying sprite sizes line up visually.
+  const CARD_BODY = 96
+
+  return (
+    <div style={{
+      background: '#fff',
+      border: '1px solid #ddd',
+      borderRadius: 6,
+      padding: 8,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: 6
+    }}>
+      <div style={{
+        fontSize: 11, fontWeight: 600, color: '#5d4e37',
+        alignSelf: 'stretch', textAlign: 'center'
+      }}>
+        {animState}
+      </div>
+      <div style={{
+        width: CARD_BODY, height: CARD_BODY,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'repeating-conic-gradient(#f0e6d5 0% 25%, #e8dcc3 0% 50%) 0 0 / 12px 12px',
+        borderRadius: 4
+      }}>
+        {config ? (
+          <SpriteCanvas
+            spriteConfig={config}
+            frameIndex={frameIndex}
+            facingLeft={false}
+            scale={2}
+          />
+        ) : (
+          <span style={{ fontSize: 10, color: '#aaa' }}>—</span>
+        )}
+      </div>
+      {config && (
+        <div style={{ fontSize: 9, color: '#a08b6a', lineHeight: 1.3, textAlign: 'center' }}>
+          {config.frameCount}f · [{config.durations.join(',')}]
+        </div>
+      )}
     </div>
   )
 }

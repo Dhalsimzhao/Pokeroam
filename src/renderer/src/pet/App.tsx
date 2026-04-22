@@ -7,6 +7,7 @@ import { usePetDrag } from './usePetDrag'
 import { useIdleEvents } from './useIdleEvents'
 import { getSpriteConfig } from '../shared/sprite-config'
 import { useI18n } from '../shared/i18n'
+import { initPetTuning, usePetTuning } from './pet-tuning'
 
 export default function App(): JSX.Element {
   const [speciesId, setSpeciesId] = useState<number | null>(null)
@@ -20,6 +21,9 @@ export default function App(): JSX.Element {
       if (data) setSpeciesId(data.speciesId)
     })
   }, [])
+
+  // Keep live pet-physics tuning in sync with the DevTools panel.
+  useEffect(() => initPetTuning(), [])
 
   // Listen for species data pushes from main process
   useEffect(() => {
@@ -70,13 +74,23 @@ export default function App(): JSX.Element {
     useCallback(() => setIdleOverride(null), [])
   )
 
-  // Resolve final anim state (idle override takes precedence when grounded)
-  const displayState = idleOverride && (animState === 'idle' || animState === 'walk')
+  // Live tuning (re-renders when dev panel adjusts idle ticks or anim override)
+  const tuning = usePetTuning()
+
+  // Resolve final anim state. Debug override from dev panel wins over everything
+  // so each animation can be previewed in isolation.
+  const physicsState = idleOverride && (animState === 'idle' || animState === 'walk')
     ? idleOverride
     : animState
+  const displayState = tuning.animOverride ?? physicsState
 
   // Sprite rendering
-  const spriteConfig = speciesId ? getSpriteConfig(speciesId, displayState) : null
+  const spriteConfig = speciesId
+    ? getSpriteConfig(speciesId, displayState, {
+        rest: tuning.idleRestTicks,
+        dip: tuning.idleDipTicks
+      })
+    : null
   const { frameIndex } = useAnimationLoop(spriteConfig)
 
   // Update hit regions for click-through detection

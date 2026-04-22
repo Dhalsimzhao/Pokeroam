@@ -60,8 +60,8 @@ export default function App(): JSX.Element {
   // Placeholder for panels not yet implemented
   const renderPlaceholder = (title: string): JSX.Element => (
     <div style={{
-      width: 800,
-      height: 600,
+      width: 1100,
+      height: 720,
       background: '#f5e6d3',
       display: 'flex',
       flexDirection: 'column',

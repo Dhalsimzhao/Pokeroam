@@ -1906,11 +1906,36 @@ export const POKEMON_SPRITES: Record<number, PokemonSpriteSet> = {
   172: PICHU_SPRITES,
 }
 
+// PMD Collab Idle sheets often cycle through 4–8 frames with enough body
+// motion to read as walking-in-place. Collapse idle to a 2-frame breathing
+// loop (long rest on frame 0, brief dip to frame 1) so the pet looks
+// stationary but alive. Cached for stable object identity so
+// useAnimationLoop doesn't re-subscribe every render; cache key includes the
+// tick values so dev-panel sliders take effect immediately.
+type SpriteSheetConfigT = import('../../../shared/types').SpriteSheetConfig
+const idleCache = new Map<string, SpriteSheetConfigT>()
+
 export function getSpriteConfig(
   speciesId: number,
-  animState: PetAnimState
-): import('../../../shared/types').SpriteSheetConfig | null {
+  animState: PetAnimState,
+  idleTicks?: { rest: number; dip: number }
+): SpriteSheetConfigT | null {
   const spriteSet = POKEMON_SPRITES[speciesId]
   if (!spriteSet) return null
-  return spriteSet[animState] ?? spriteSet['idle'] ?? null
+  const base = spriteSet[animState] ?? spriteSet['idle']
+  if (!base) return null
+  if (animState === 'idle') {
+    const rest = Math.max(1, Math.round(idleTicks?.rest ?? 110))
+    const dip = Math.max(1, Math.round(idleTicks?.dip ?? 8))
+    const key = `${speciesId}:${rest}:${dip}`
+    let cached = idleCache.get(key)
+    if (!cached) {
+      cached = base.frameCount >= 2
+        ? { ...base, frameCount: 2, durations: [rest, dip] }
+        : { ...base, frameCount: 1, durations: [base.durations[0]] }
+      idleCache.set(key, cached)
+    }
+    return cached
+  }
+  return base
 }

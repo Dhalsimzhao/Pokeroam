@@ -4,8 +4,8 @@ import { is } from '@electron-toolkit/utils'
 
 export function createPanelWindow(): BrowserWindow {
   const win = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1100,
+    height: 720,
     show: false,
     frame: true,
     resizable: true,

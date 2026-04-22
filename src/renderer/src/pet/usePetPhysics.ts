@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { PetAnimState } from '../../../shared/types'
+import { petTuning } from './pet-tuning'
 
-const WALK_SPEED = 1.5 // pixels per frame
-const GRAVITY = 0.5 // pixels per frame²
 const WINDOW_SIZE = 128
 // Roam radius from the anchor point, as a fraction of screen width.
 // Total active range = 2 * ROAM_RADIUS_RATIO (= 1/4 of screen width).
@@ -74,7 +73,7 @@ export function usePetPhysics(): PhysicsAPI {
         nextActionRef.current = frameCount + Math.round(randomBetween(120, 300))
       } else {
         const goLeft = Math.random() < 0.5
-        s.vx = goLeft ? -WALK_SPEED : WALK_SPEED
+        s.vx = goLeft ? -petTuning.walkSpeed : petTuning.walkSpeed
         s.facingLeft = goLeft
         s.animState = 'walk'
         nextActionRef.current = frameCount + Math.round(randomBetween(180, 480))
@@ -88,11 +87,11 @@ export function usePetPhysics(): PhysicsAPI {
       const maxX = anchor + roamRadius - WINDOW_SIZE / 2
       if (s.x < minX) {
         s.x = minX
-        s.vx = WALK_SPEED
+        s.vx = petTuning.walkSpeed
         s.facingLeft = false
       } else if (s.x > maxX) {
         s.x = maxX
-        s.vx = -WALK_SPEED
+        s.vx = -petTuning.walkSpeed
         s.facingLeft = true
       }
     }
@@ -122,6 +121,9 @@ export function usePetPhysics(): PhysicsAPI {
           pickNextAction()
         }
 
+        // Refresh vx magnitude from live tuning each frame so speed changes
+        // take effect mid-walk without waiting for the next action pick.
+        if (s.vx !== 0) s.vx = Math.sign(s.vx) * petTuning.walkSpeed
         s.x += s.vx
         clampToBounds(s, wa)
 
@@ -129,7 +131,7 @@ export function usePetPhysics(): PhysicsAPI {
         s.y = wa.y + wa.height - WINDOW_SIZE
       } else {
         // Airborne — apply gravity
-        s.vy += GRAVITY
+        s.vy += petTuning.gravity
         s.y += s.vy
 
         // Landing check

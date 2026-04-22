@@ -86,5 +86,10 @@ contextBridge.exposeInMainWorld('api', {
   // Debug panel
   onPanelNavigate: (cb: Callback<string>) => onIpc('panel-navigate', cb),
   applyDebugSaveData: (data: unknown) => ipcRenderer.invoke('debug-apply-save-data', data),
-  isDevMode: () => ipcRenderer.invoke('is-dev-mode')
+  isDevMode: () => ipcRenderer.invoke('is-dev-mode'),
+
+  // Dev-only pet physics tuning
+  getPetTuning: () => ipcRenderer.invoke('get-pet-tuning'),
+  setPetTuning: (patch: unknown) => ipcRenderer.invoke('set-pet-tuning', patch),
+  onPetTuningUpdate: (cb: Callback) => onIpc('pet-tuning-update', cb)
 })

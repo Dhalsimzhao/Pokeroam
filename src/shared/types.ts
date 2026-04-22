@@ -152,3 +152,22 @@ export interface DialogueData {
   default: Record<DialogueEventType, DialogueEntry[]>
   species: Record<string, Partial<Record<DialogueEventType, DialogueEntry[]>>>
 }
+
+// ---- Dev-only live tuning (not persisted) ----
+export interface PetTuning {
+  walkSpeed: number // pixels per frame (x axis)
+  gravity: number // pixels per frame² (y axis when airborne)
+  animationSpeed: number // multiplier on sprite frame advance (1.0 = native)
+  idleRestTicks: number // ticks the pet rests on the neutral idle frame
+  idleDipTicks: number // ticks it dips to the second idle frame (breath pulse)
+  animOverride: PetAnimState | null // dev-only: force the pet into a specific animation
+}
+
+export const DEFAULT_PET_TUNING: PetTuning = {
+  walkSpeed: 0.6,
+  gravity: 0.5,
+  animationSpeed: 1.0,
+  idleRestTicks: 110,
+  idleDipTicks: 8,
+  animOverride: null
+}

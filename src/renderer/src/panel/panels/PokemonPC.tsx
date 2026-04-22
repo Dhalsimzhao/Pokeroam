@@ -45,8 +45,8 @@ export function PokemonPC({ saveData, onBack }: PokemonPCProps): JSX.Element {
 
   return (
     <div style={{
-      width: 800,
-      height: 600,
+      width: 1100,
+      height: 720,
       background: '#f5e6d3',
       display: 'flex',
       flexDirection: 'column',

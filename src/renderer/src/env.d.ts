@@ -51,6 +51,15 @@ interface ElectronAPI {
   onPanelNavigate: (cb: (view: string) => void) => () => void
   applyDebugSaveData: (data: unknown) => Promise<boolean>
   isDevMode: () => Promise<boolean>
+
+  // Dev-only pet physics tuning
+  getPetTuning: () => Promise<import('../../shared/types').PetTuning>
+  setPetTuning: (
+    patch: Partial<import('../../shared/types').PetTuning>
+  ) => Promise<import('../../shared/types').PetTuning>
+  onPetTuningUpdate: (
+    cb: (tuning: import('../../shared/types').PetTuning) => void
+  ) => () => void
 }
 
 declare global {

@@ -83,6 +83,20 @@ export interface Locale {
   debugCancel: string
   debugQuantity: string
   debugUnsavedChanges: string
+  debugTabTuning: string
+  debugTabAnim: string
+  debugAnimSpecies: string
+  debugAnimHint: string
+  debugTuningWalkSpeed: string
+  debugTuningGravity: string
+  debugTuningAnimationSpeed: string
+  debugTuningIdleRest: string
+  debugTuningIdleDip: string
+  debugTuningAnimOverride: string
+  debugTuningAnimOverrideHint: string
+  debugTuningAnimAuto: string
+  debugTuningReset: string
+  debugTuningHint: string
 
   // Language
   language: string
