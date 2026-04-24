@@ -520,6 +520,14 @@ function setupIpcHandlers(): void {
     if (name) dialogueManager.showDialogue(name, 'fall')
   })
 
+  ipcMain.on('trigger-mood-dialogue', (_e, mood: 'happy' | 'eat' | 'sleep') => {
+    const name = getActiveSpeciesName()
+    if (!name) return
+    const eventType: DialogueEventType =
+      mood === 'happy' ? 'moodHappy' : mood === 'eat' ? 'moodEat' : 'moodSleep'
+    dialogueManager.showDialogue(name, eventType)
+  })
+
   // Dev-mode probe for renderer
   ipcMain.handle('is-dev-mode', () => is.dev)
 

@@ -142,6 +142,9 @@ export type DialogueEventType =
   | 'dailyReward'
   | 'greeting'
   | 'longIdle'
+  | 'moodHappy'
+  | 'moodEat'
+  | 'moodSleep'
 
 export interface DialogueEntry {
   emotion: DialogueEmotion

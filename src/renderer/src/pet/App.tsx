@@ -64,7 +64,7 @@ export default function App(): JSX.Element {
   }, [showDebug])
 
   // Physics: walking, gravity, anim state
-  const { animState, facingLeftRef, stateRef, startDrag, endDrag, onDragMove } = usePetPhysics()
+  const { animState, facingLeftRef, stateRef, startDrag, endDrag, onDragMove, setPaused } = usePetPhysics()
 
   // Drag & drop
   usePetDrag(containerRef, {
@@ -73,11 +73,14 @@ export default function App(): JSX.Element {
     onDragMove
   })
 
-  // Random idle events
+  // Random idle events — moods pair with dialogue and may chain into 2-beat
+  // scripts (happy ↔ eat). Physics is paused for the duration so the pet
+  // actually stops to emote instead of walking through the animation.
   useIdleEvents(
     animState,
     useCallback((state: PetAnimState) => setIdleOverride(state), []),
-    useCallback(() => setIdleOverride(null), [])
+    useCallback(() => setIdleOverride(null), []),
+    setPaused
   )
 
   // Live tuning (re-renders when dev panel adjusts idle ticks or anim override)

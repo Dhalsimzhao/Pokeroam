@@ -80,6 +80,11 @@ contextBridge.exposeInMainWorld('api', {
   onDialogueShow: (cb: Callback) => onIpc('dialogue-show', cb),
   onDialogueHide: (cb: Callback) => onIpc('dialogue-hide', cb),
 
+  // Mood-driven dialogue trigger from pet renderer (paired with idle animations)
+  triggerMoodDialogue: (mood: 'happy' | 'eat' | 'sleep'): void => {
+    ipcRenderer.send('trigger-mood-dialogue', mood)
+  },
+
   // Debug
   onToggleDebug: (cb: Callback<boolean>) => onIpc('toggle-debug', cb),
 

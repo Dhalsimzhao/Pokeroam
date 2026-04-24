@@ -45,6 +45,9 @@ interface ElectronAPI {
   onDialogueShow: (cb: (data: unknown) => void) => () => void
   onDialogueHide: (cb: (data: unknown) => void) => () => void
 
+  // Mood-driven dialogue trigger from pet renderer
+  triggerMoodDialogue: (mood: 'happy' | 'eat' | 'sleep') => void
+
   onToggleDebug: (cb: (enabled: boolean) => void) => () => void
 
   // Debug panel

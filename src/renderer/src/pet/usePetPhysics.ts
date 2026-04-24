@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { PetAnimState } from '../../../shared/types'
 import { PET_WINDOW_SIZE } from '../../../shared/constants'
 import { petTuning } from './pet-tuning'
@@ -26,6 +26,13 @@ interface PhysicsAPI {
   startDrag: () => void
   endDrag: () => void
   onDragMove: (dx: number, dy: number) => void
+  /**
+   * Freeze/unfreeze the roam loop. While paused the pet holds position
+   * (vx forced to 0) and no new walk/idle actions are picked, so a scripted
+   * beat from useIdleEvents can play to completion without the physics loop
+   * wandering mid-animation.
+   */
+  setPaused: (paused: boolean) => void
 }
 
 function randomBetween(min: number, max: number): number {
@@ -57,6 +64,7 @@ export function usePetPhysics(): PhysicsAPI {
   })
   const workAreaRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null)
   const draggingRef = useRef(false)
+  const pausedRef = useRef(false)
   const nextActionRef = useRef(0)
   // Anchor x (pet center) of the current roam area. Clamped so the roam range
   // never extends past the screen edges.
@@ -118,13 +126,17 @@ export function usePetPhysics(): PhysicsAPI {
       }
 
       if (s.grounded) {
-        if (frameCount >= nextActionRef.current) {
-          pickNextAction()
+        if (pausedRef.current) {
+          // Scripted beat in progress — hold position until unpaused.
+          s.vx = 0
+        } else {
+          if (frameCount >= nextActionRef.current) {
+            pickNextAction()
+          }
+          // Refresh vx magnitude from live tuning each frame so speed changes
+          // take effect mid-walk without waiting for the next action pick.
+          if (s.vx !== 0) s.vx = Math.sign(s.vx) * petTuning.walkSpeed
         }
-
-        // Refresh vx magnitude from live tuning each frame so speed changes
-        // take effect mid-walk without waiting for the next action pick.
-        if (s.vx !== 0) s.vx = Math.sign(s.vx) * petTuning.walkSpeed
         s.x += s.vx
         clampToBounds(s, wa)
 
@@ -223,5 +235,12 @@ export function usePetPhysics(): PhysicsAPI {
     s.y += dy
   }
 
-  return { animState, facingLeft, facingLeftRef, stateRef, startDrag, endDrag, onDragMove }
+  // Stable identity — consumers (useIdleEvents) put this in a useEffect
+  // dep list, so a fresh ref each render would re-run the effect and cut off
+  // an in-flight scripted beat.
+  const setPaused = useCallback((paused: boolean): void => {
+    pausedRef.current = paused
+  }, [])
+
+  return { animState, facingLeft, facingLeftRef, stateRef, startDrag, endDrag, onDragMove, setPaused }
 }

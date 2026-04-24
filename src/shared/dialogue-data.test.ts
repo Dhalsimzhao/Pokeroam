@@ -35,6 +35,15 @@ const mockData: DialogueData = {
     ],
     longIdle: [
       { emotion: 'Sad', text: '好无聊...' }
+    ],
+    moodHappy: [
+      { emotion: 'Happy', text: '心情真好！' }
+    ],
+    moodEat: [
+      { emotion: 'Joyous', text: '好吃！' }
+    ],
+    moodSleep: [
+      { emotion: 'Sigh', text: 'Zzz...' }
     ]
   },
   species: {
@@ -60,7 +69,10 @@ const mockDataEmpty: DialogueData = {
     fatigue: [],
     dailyReward: [],
     greeting: [],
-    longIdle: []
+    longIdle: [],
+    moodHappy: [],
+    moodEat: [],
+    moodSleep: []
   },
   species: {}
 }

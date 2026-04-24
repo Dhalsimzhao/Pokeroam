@@ -1,53 +1,66 @@
 {
   "default": {
     "idle": [
-      { "emotion": "Normal", "text": "" },
-      { "emotion": "Happy", "text": "" },
-      { "emotion": "Sigh", "text": "" }
+      { "emotion": "Normal", "text": "……" },
+      { "emotion": "Happy", "text": "嗯哼~♪" },
+      { "emotion": "Sigh", "text": "呼……" }
     ],
     "levelup": [
-      { "emotion": "Joyous", "text": "" },
-      { "emotion": "Happy", "text": "" },
-      { "emotion": "Determined", "text": "" }
+      { "emotion": "Joyous", "text": "升级了！" },
+      { "emotion": "Happy", "text": "{name}变强啦！" },
+      { "emotion": "Determined", "text": "还要继续变强！" }
     ],
     "evolve": [
-      { "emotion": "Determined", "text": "" },
-      { "emotion": "Surprised", "text": "" },
-      { "emotion": "Joyous", "text": "" }
+      { "emotion": "Determined", "text": "{name}要进化了！" },
+      { "emotion": "Surprised", "text": "身、身体在发光……！" },
+      { "emotion": "Joyous", "text": "感觉充满了力量！" }
     ],
     "feed": [
-      { "emotion": "Happy", "text": "" },
-      { "emotion": "Joyous", "text": "" }
+      { "emotion": "Happy", "text": "好好吃~" },
+      { "emotion": "Joyous", "text": "谢谢你！" }
     ],
     "drag": [
-      { "emotion": "Surprised", "text": "" },
-      { "emotion": "Dizzy", "text": "" },
-      { "emotion": "Angry", "text": "" }
+      { "emotion": "Surprised", "text": "哇！？" },
+      { "emotion": "Dizzy", "text": "头、头好晕……" },
+      { "emotion": "Angry", "text": "喂——放我下来！" }
     ],
     "fall": [
-      { "emotion": "Pain", "text": "" },
-      { "emotion": "Stunned", "text": "" },
-      { "emotion": "Dizzy", "text": "" }
+      { "emotion": "Pain", "text": "好痛……" },
+      { "emotion": "Stunned", "text": "呃……" },
+      { "emotion": "Dizzy", "text": "转呀转……" }
     ],
     "fatigue": [
-      { "emotion": "Worried", "text": "" },
-      { "emotion": "Sad", "text": "" },
-      { "emotion": "Sigh", "text": "" }
+      { "emotion": "Worried", "text": "你还好吗？" },
+      { "emotion": "Sad", "text": "工作太久了……" },
+      { "emotion": "Sigh", "text": "休息一下嘛~" }
     ],
     "dailyReward": [
-      { "emotion": "Joyous", "text": "" },
-      { "emotion": "Happy", "text": "" },
-      { "emotion": "Surprised", "text": "" }
+      { "emotion": "Joyous", "text": "{name}找到好东西啦！" },
+      { "emotion": "Happy", "text": "给你今天的礼物~" },
+      { "emotion": "Surprised", "text": "咦？这是什么？" }
     ],
     "greeting": [
-      { "emotion": "Happy", "text": "" },
-      { "emotion": "Normal", "text": "" },
-      { "emotion": "Joyous", "text": "" }
+      { "emotion": "Happy", "text": "你好呀~" },
+      { "emotion": "Normal", "text": "又见面啦。" },
+      { "emotion": "Joyous", "text": "{name}很高兴见到你！" }
     ],
     "longIdle": [
-      { "emotion": "Sad", "text": "" },
-      { "emotion": "Worried", "text": "" },
-      { "emotion": "Sigh", "text": "" }
+      { "emotion": "Sad", "text": "……好寂寞。" },
+      { "emotion": "Worried", "text": "你还在吗？" },
+      { "emotion": "Sigh", "text": "呼……无聊哦……" }
+    ],
+    "moodHappy": [
+      { "emotion": "Happy", "text": "心情真好~" },
+      { "emotion": "Joyous", "text": "♪♪♪" },
+      { "emotion": "Inspired", "text": "今天也要加油！" }
+    ],
+    "moodEat": [
+      { "emotion": "Happy", "text": "吃点东西~" },
+      { "emotion": "Joyous", "text": "咕噜咕噜……" }
+    ],
+    "moodSleep": [
+      { "emotion": "Sigh", "text": "呼……呼……" },
+      { "emotion": "Normal", "text": "Zzz……" }
     ]
   },
   "species": {
@@ -108,6 +121,19 @@
       "longIdle": [
         { "emotion": "Sad", "text": "布伊...你忘记{name}了吗？" },
         { "emotion": "Worried", "text": "伊布好无聊...陪我玩嘛..." }
+      ],
+      "moodHappy": [
+        { "emotion": "Happy", "text": "布伊~心情真好！" },
+        { "emotion": "Joyous", "text": "伊布伊！✨" },
+        { "emotion": "Inspired", "text": "哼哼~{name}今天超棒的！" }
+      ],
+      "moodEat": [
+        { "emotion": "Joyous", "text": "布伊~咕噜咕噜..." },
+        { "emotion": "Happy", "text": "啊呜~好吃！" }
+      ],
+      "moodSleep": [
+        { "emotion": "Sigh", "text": "呼...呼..." },
+        { "emotion": "Normal", "text": "Zzz..." }
       ]
     }
   }
