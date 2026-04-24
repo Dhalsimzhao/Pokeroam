@@ -91,5 +91,12 @@ contextBridge.exposeInMainWorld('api', {
   // Dev-only pet physics tuning
   getPetTuning: () => ipcRenderer.invoke('get-pet-tuning'),
   setPetTuning: (patch: unknown) => ipcRenderer.invoke('set-pet-tuning', patch),
-  onPetTuningUpdate: (cb: Callback) => onIpc('pet-tuning-update', cb)
+  onPetTuningUpdate: (cb: Callback) => onIpc('pet-tuning-update', cb),
+
+  // Sprite anchors (read from / write to each species' AnimData.xml)
+  getSpriteAnchors: (speciesId?: number) =>
+    ipcRenderer.invoke('get-sprite-anchors', speciesId),
+  updateSpriteAnchors: (speciesId: number, patch: unknown) =>
+    ipcRenderer.invoke('update-sprite-anchors', speciesId, patch),
+  onSpriteAnchorsUpdate: (cb: Callback) => onIpc('sprite-anchors-update', cb)
 })

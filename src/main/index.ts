@@ -9,8 +9,22 @@ import { KeyboardMonitor } from './keyboard-monitor'
 import { FatigueDetector } from './fatigue-detector'
 import { DailyRewardManager } from './daily-reward'
 import { DialogueManager } from './dialogue-manager'
-import type { DialogueEventType, OwnedPokemon, PetTuning, SaveData } from '../shared/types'
-import { DEFAULT_PET_TUNING } from '../shared/types'
+import {
+  getSpriteAnchorStore,
+  getSpriteAnchorsForSpecies,
+  initSpriteAnchors,
+  updateSpriteAnchors
+} from './sprite-anchors'
+import type {
+  AnimParams,
+  DialogueEventType,
+  OwnedPokemon,
+  PetTuning,
+  SaveData
+} from '../shared/types'
+import type { SpriteAnchorMap } from '../shared/sprite-anchors'
+import { ALL_PMD_ANIMS } from '../shared/sprite-anchors'
+import { ALL_ANIM_STATES, DEFAULT_PET_TUNING } from '../shared/types'
 import { POKEMON_SPECIES, getSpeciesById, getExpForLevel } from '../shared/pokemon-data'
 import { getItemById } from '../shared/item-data'
 import {
@@ -18,7 +32,8 @@ import {
   IDLE_CHAT_MIN_MS,
   IDLE_CHAT_MAX_MS,
   LONG_IDLE_THRESHOLD_MS,
-  GREETING_DELAY_MS
+  GREETING_DELAY_MS,
+  PET_WINDOW_SIZE
 } from '../shared/constants'
 import { getLocale, localeName, type LangCode } from '../shared/i18n'
 import { is } from '@electron-toolkit/utils'
@@ -113,13 +128,16 @@ function cascadeLevelEvolution(pokemon: OwnedPokemon, pokedex: number[]): void {
 let hitRegions: Array<{ x: number; y: number; width: number; height: number }> = []
 let cursorInside = false
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   saveManager = new SaveManager()
   growthManager = new GrowthManager()
   keyboardMonitor = new KeyboardMonitor()
   fatigueDetector = new FatigueDetector()
   dailyRewardManager = new DailyRewardManager()
   saveData = saveManager.load()
+  // Parse all AnimData.xml files up-front so renderer's first request returns
+  // synchronously from the in-memory cache.
+  await initSpriteAnchors()
 
   petWindow = createPetWindow()
   panelWindow = createPanelWindow()
@@ -462,9 +480,9 @@ function setupIpcHandlers(): void {
   ipcMain.on('set-pet-position', (_e, x: number, y: number) => {
     if (!petWindow) return
     const { workArea } = screen.getPrimaryDisplay()
-    const clampedX = Math.max(workArea.x, Math.min(Math.round(x), workArea.x + workArea.width - 128))
-    const clampedY = Math.max(workArea.y, Math.min(Math.round(y), workArea.y + workArea.height - 128))
-    petWindow.setBounds({ x: clampedX, y: clampedY, width: 128, height: 128 })
+    const clampedX = Math.max(workArea.x, Math.min(Math.round(x), workArea.x + workArea.width - PET_WINDOW_SIZE))
+    const clampedY = Math.max(workArea.y, Math.min(Math.round(y), workArea.y + workArea.height - PET_WINDOW_SIZE))
+    petWindow.setBounds({ x: clampedX, y: clampedY, width: PET_WINDOW_SIZE, height: PET_WINDOW_SIZE })
     dialogueManager.updatePosition()
   })
 
@@ -477,13 +495,17 @@ function setupIpcHandlers(): void {
   ipcMain.on('drag-move', (_e, dx: number, dy: number) => {
     if (!petWindow) return
     const [x, y] = petWindow.getPosition()
-    petWindow.setBounds({ x: x + dx, y: y + dy, width: 128, height: 128 })
+    petWindow.setBounds({ x: x + dx, y: y + dy, width: PET_WINDOW_SIZE, height: PET_WINDOW_SIZE })
     dialogueManager.updatePosition()
   })
 
-  // Update hit regions (for Windows click-through polling)
+  // Update hit regions (for Windows click-through polling). The renderer
+  // reports the sprite's own bounding box (in pet-window client coords), so
+  // we also forward it to the dialogue manager — it anchors the bubble to
+  // the sprite's actual top rather than the full window top.
   ipcMain.on('update-hit-regions', (_e, regions) => {
     hitRegions = regions
+    dialogueManager?.setSpriteBounds(regions?.[0] ?? null)
   })
 
   // Dialogue triggers from pet renderer
@@ -506,36 +528,90 @@ function setupIpcHandlers(): void {
   ipcMain.handle('set-pet-tuning', (_e, patch: Partial<PetTuning>) => {
     if (!is.dev) return petTuning
     if (!patch || typeof patch !== 'object') return petTuning
-    const next: PetTuning = { ...petTuning }
+    const next: PetTuning = {
+      ...petTuning,
+      animParams: { ...petTuning.animParams }
+    }
     if (typeof patch.walkSpeed === 'number' && Number.isFinite(patch.walkSpeed)) {
       next.walkSpeed = patch.walkSpeed
     }
     if (typeof patch.gravity === 'number' && Number.isFinite(patch.gravity)) {
       next.gravity = patch.gravity
     }
-    if (typeof patch.animationSpeed === 'number' && Number.isFinite(patch.animationSpeed)) {
-      next.animationSpeed = patch.animationSpeed
-    }
-    if (typeof patch.idleRestTicks === 'number' && Number.isFinite(patch.idleRestTicks)) {
-      next.idleRestTicks = Math.max(1, Math.round(patch.idleRestTicks))
-    }
-    if (typeof patch.idleDipTicks === 'number' && Number.isFinite(patch.idleDipTicks)) {
-      next.idleDipTicks = Math.max(1, Math.round(patch.idleDipTicks))
-    }
     if ('animOverride' in patch) {
       const v = patch.animOverride
-      const allowed: ReadonlyArray<string> = [
-        'idle', 'walk', 'sleep', 'happy', 'eat', 'levelup', 'evolve', 'dragging', 'falling'
-      ]
-      next.animOverride = v === null || (typeof v === 'string' && allowed.includes(v))
-        ? (v as PetTuning['animOverride'])
-        : null
+      next.animOverride =
+        v === null || (typeof v === 'string' && (ALL_ANIM_STATES as string[]).includes(v))
+          ? (v as PetTuning['animOverride'])
+          : null
+    }
+    if (patch.animParams && typeof patch.animParams === 'object') {
+      // Dev-only: shallow-merge whatever the renderer sent for each animation
+      // state. Intentionally not whitelisting AnimParams fields — when a field
+      // is added to shared/types, forgetting to teach this validator about it
+      // means stale main silently drops the field and forces a restart. We
+      // trust the (type-checked) renderer instead; only sanity-clamp the two
+      // numeric fields physics actually reads.
+      for (const state of ALL_ANIM_STATES) {
+        const incoming = (patch.animParams as Record<string, unknown>)[state]
+        if (!incoming || typeof incoming !== 'object') continue
+        const current =
+          next.animParams[state] ?? { ...DEFAULT_PET_TUNING.animParams[state] }
+        const merged: AnimParams = { ...current, ...(incoming as Partial<AnimParams>) }
+        merged.row =
+          typeof merged.row === 'number' && Number.isFinite(merged.row)
+            ? Math.max(0, Math.min(7, Math.round(merged.row)))
+            : current.row
+        next.animParams[state] = merged
+      }
     }
     petTuning = next
     petWindow?.webContents.send('pet-tuning-update', petTuning)
     panelWindow?.webContents.send('pet-tuning-update', petTuning)
     return petTuning
   })
+
+  // Sprite anchors (per-species AnchorBottom/PlaybackSpeed read from each
+  // species' AnimData.xml). Shipped as an in-memory cache populated at boot;
+  // dev-only writeback updates both the file and the cache, then broadcasts
+  // the new map so the pet window can re-anchor without a restart.
+  ipcMain.handle('get-sprite-anchors', (_e, speciesId?: number) => {
+    if (typeof speciesId === 'number') return getSpriteAnchorsForSpecies(speciesId)
+    return getSpriteAnchorStore()
+  })
+  ipcMain.handle(
+    'update-sprite-anchors',
+    async (_e, speciesId: number, patch: SpriteAnchorMap) => {
+      if (!is.dev) return null
+      if (typeof speciesId !== 'number' || !patch || typeof patch !== 'object') return null
+      // Sanity-clamp incoming values per anim — renderer is type-checked but
+      // keep main defensive against malformed IPC payloads.
+      const sanitized: SpriteAnchorMap = {}
+      for (const anim of ALL_PMD_ANIMS) {
+        const entry = patch[anim]
+        if (!entry || typeof entry !== 'object') continue
+        const anchor = (entry as { anchorBottom?: unknown }).anchorBottom
+        const speed = (entry as { speed?: unknown }).speed
+        const cleaned: { anchorBottom?: number; speed?: number } = {}
+        if (typeof anchor === 'number' && Number.isFinite(anchor)) {
+          cleaned.anchorBottom = Math.max(0, Math.min(96, Math.round(anchor)))
+        }
+        if (typeof speed === 'number' && Number.isFinite(speed)) {
+          cleaned.speed = Math.max(0.05, Math.min(5, Number(speed.toFixed(2))))
+        }
+        if (Object.keys(cleaned).length > 0) {
+          sanitized[anim] = cleaned as { anchorBottom: number; speed: number }
+        }
+      }
+      const next = await updateSpriteAnchors(speciesId, sanitized)
+      if (next) {
+        const payload = { speciesId, anchors: next }
+        petWindow?.webContents.send('sprite-anchors-update', payload)
+        panelWindow?.webContents.send('sprite-anchors-update', payload)
+      }
+      return next
+    }
+  )
 
   // Debug panel: atomically replace save data
   ipcMain.handle('debug-apply-save-data', (_e, incoming: SaveData) => {
@@ -595,12 +671,12 @@ function startBoundsCheck(): void {
     if (!petWindow) return
     const [x, y] = petWindow.getPosition()
     const { workArea } = screen.getPrimaryDisplay()
-    const maxX = workArea.x + workArea.width - 128
-    const maxY = workArea.y + workArea.height - 128
+    const maxX = workArea.x + workArea.width - PET_WINDOW_SIZE
+    const maxY = workArea.y + workArea.height - PET_WINDOW_SIZE
     if (x < workArea.x || x > maxX || y < workArea.y || y > maxY) {
       const newX = Math.max(workArea.x, Math.min(x, maxX))
       const newY = Math.max(workArea.y, Math.min(y, maxY))
-      petWindow.setBounds({ x: newX, y: newY, width: 128, height: 128 })
+      petWindow.setBounds({ x: newX, y: newY, width: PET_WINDOW_SIZE, height: PET_WINDOW_SIZE })
     }
   }, 5000)
 }

@@ -1,15 +1,16 @@
 import { BrowserWindow, screen } from 'electron'
 import { join } from 'path'
 import { is } from '@electron-toolkit/utils'
+import { PET_WINDOW_SIZE } from '../shared/constants'
 
 export function createPetWindow(): BrowserWindow {
   const { workArea } = screen.getPrimaryDisplay()
 
   const win = new BrowserWindow({
-    width: 128,
-    height: 128,
-    x: workArea.x + workArea.width - 128 - 20,
-    y: workArea.y + workArea.height - 128,
+    width: PET_WINDOW_SIZE,
+    height: PET_WINDOW_SIZE,
+    x: workArea.x + workArea.width - PET_WINDOW_SIZE - 20,
+    y: workArea.y + workArea.height - PET_WINDOW_SIZE,
     frame: false,
     transparent: true,
     alwaysOnTop: true,

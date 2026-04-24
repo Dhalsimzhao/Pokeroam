@@ -89,14 +89,29 @@ export interface Locale {
   debugAnimHint: string
   debugTuningWalkSpeed: string
   debugTuningGravity: string
-  debugTuningAnimationSpeed: string
-  debugTuningIdleRest: string
-  debugTuningIdleDip: string
+  debugTuningAnimSpeed: string
+  debugTuningAnimAnchorBottom: string
+  debugAnimUpdateXml: string
+  debugAnimUpdateXmlHint: string
+  debugAnimRevertDraft: string
+  debugAnimRevertDraftHint: string
+  debugAnimCopyCodeDefaults: string
+  debugAnimCopyCodeDefaultsHint: string
+  debugTuningAnimDirection: string
+  debugAnimSource: string
   debugTuningAnimOverride: string
   debugTuningAnimOverrideHint: string
   debugTuningAnimAuto: string
   debugTuningReset: string
   debugTuningHint: string
+  debugAnimDirDown: string
+  debugAnimDirDownRight: string
+  debugAnimDirRight: string
+  debugAnimDirUpRight: string
+  debugAnimDirUp: string
+  debugAnimDirUpLeft: string
+  debugAnimDirLeft: string
+  debugAnimDirDownLeft: string
 
   // Language
   language: string

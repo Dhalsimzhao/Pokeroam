@@ -60,6 +60,22 @@ interface ElectronAPI {
   onPetTuningUpdate: (
     cb: (tuning: import('../../shared/types').PetTuning) => void
   ) => () => void
+
+  // Sprite anchors (per-species AnchorBottom/PlaybackSpeed in AnimData.xml)
+  getSpriteAnchors: {
+    (): Promise<import('../../shared/sprite-anchors').SpriteAnchorStore>
+    (speciesId: number): Promise<import('../../shared/sprite-anchors').SpriteAnchorMap>
+  }
+  updateSpriteAnchors: (
+    speciesId: number,
+    patch: import('../../shared/sprite-anchors').SpriteAnchorMap
+  ) => Promise<import('../../shared/sprite-anchors').SpriteAnchorMap | null>
+  onSpriteAnchorsUpdate: (
+    cb: (payload: {
+      speciesId: number
+      anchors: import('../../shared/sprite-anchors').SpriteAnchorMap
+    }) => void
+  ) => () => void
 }
 
 declare global {

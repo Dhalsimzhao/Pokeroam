@@ -8,22 +8,37 @@ import type {
   PetTuning,
   SpriteSheetConfig
 } from '../../../../shared/types'
-import { DEFAULT_PET_TUNING } from '../../../../shared/types'
+import {
+  ALL_ANIM_STATES,
+  DEFAULT_PET_TUNING,
+  MULTI_DIRECTION_ANIMS
+} from '../../../../shared/types'
 import { POKEMON_SPECIES, getSpeciesById, getExpForLevel } from '../../../../shared/pokemon-data'
 import { ITEMS, getItemById } from '../../../../shared/item-data'
 import { MAX_LEVEL } from '../../../../shared/constants'
 import { localeName, type LangCode, type Locale } from '../../../../shared/i18n'
 import { useI18n } from '../../shared/i18n'
-import { getSpriteConfig } from '../../shared/sprite-config'
+import {
+  getAvailableSpriteKeys,
+  getSpriteConfig,
+  SPRITE_KEY_FILENAMES
+} from '../../shared/sprite-config'
 import { SpriteCanvas } from '../../pet/SpriteCanvas'
 import { useAnimationLoop } from '../../pet/useAnimationLoop'
 import { initPetTuning } from '../../pet/pet-tuning'
+import {
+  ALL_PMD_ANIMS,
+  resolveAnchor,
+  SPRITE_KEY_TO_PMD_ANIM,
+  type PmdAnimName,
+  type SpriteAnchorEntry,
+  type SpriteAnchorMap
+} from '../../../../shared/sprite-anchors'
+import { useSpeciesAnchors } from '../../shared/sprite-anchors-store'
 
 type Tab = 'pokemon' | 'backpack' | 'tuning' | 'anim'
 
-const ANIM_STATES: PetAnimState[] = [
-  'idle', 'walk', 'sleep', 'happy', 'eat', 'levelup', 'evolve', 'dragging', 'falling'
-]
+const ANIM_STATES = ALL_ANIM_STATES
 
 interface Props {
   saveData: SaveData
@@ -520,6 +535,33 @@ interface AnimationTabProps {
   saveData: SaveData
 }
 
+/**
+ * Dump the current row + spriteKey choices as paste-ready TS literals that
+ * match `DEFAULT_ANIM_ROWS` and `DEFAULT_SPRITE_KEYS` in shared/types.ts.
+ * These two are global gameplay decisions (per PetAnimState, not per species),
+ * so they live in code — the dev panel just helps you tune and snapshot them.
+ */
+function copyCodeDefaultsToClipboard(animParams: PetTuning['animParams']): void {
+  const rowLines = ALL_ANIM_STATES.map((s) => `  ${s}: ${animParams[s].row}`).join(',\n')
+  const keyLines = ALL_ANIM_STATES
+    .map((s) => `  ${s}: '${animParams[s].spriteKey}'`).join(',\n')
+  const snippet =
+    `export const DEFAULT_ANIM_ROWS: Record<PetAnimState, number> = {\n${rowLines}\n}\n\n` +
+    `export const DEFAULT_SPRITE_KEYS: Record<PetAnimState, PetAnimState> = {\n${keyLines}\n}\n`
+  void navigator.clipboard.writeText(snippet)
+}
+
+const DIRECTION_LABEL_KEYS: ReadonlyArray<keyof Locale> = [
+  'debugAnimDirDown',
+  'debugAnimDirDownRight',
+  'debugAnimDirRight',
+  'debugAnimDirUpRight',
+  'debugAnimDirUp',
+  'debugAnimDirUpLeft',
+  'debugAnimDirLeft',
+  'debugAnimDirDownLeft'
+]
+
 function AnimationTab({ lang, t, saveData }: AnimationTabProps): JSX.Element {
   const activeSpeciesId =
     saveData.pokemon.find((p) => p.id === saveData.activePokemonId)?.speciesId
@@ -527,33 +569,102 @@ function AnimationTab({ lang, t, saveData }: AnimationTabProps): JSX.Element {
   const [speciesId, setSpeciesId] = useState<number>(activeSpeciesId)
   const [tuning, setTuning] = useState<PetTuning>(DEFAULT_PET_TUNING)
 
+  // Saved (on-disk) anchors for this species, fetched from main and kept in
+  // sync with broadcasts. After a successful "Update XML" the broadcast lands
+  // here, which in turn rehydrates the local draft below.
+  const savedAnchors = useSpeciesAnchors(speciesId)
+
+  // Per-species draft of <AnchorBottom>/<PlaybackSpeed> values the user is
+  // tuning. Independent of `savedAnchors` until "Update XML" persists, so
+  // mid-tuning state isn't lost if a broadcast fires for an unrelated reason.
+  const [draftAnchors, setDraftAnchors] = useState<SpriteAnchorMap>({})
+
+  // Whenever we land on a different species (or the saved snapshot updates,
+  // e.g. after a write), reset the draft to mirror disk. Prevents stale draft
+  // values from one species leaking into another after a switch.
+  useEffect(() => {
+    setDraftAnchors({ ...savedAnchors })
+  }, [speciesId, savedAnchors])
+
+  const draftDirty = useMemo(() => {
+    for (const anim of ALL_PMD_ANIMS) {
+      const a = resolveAnchor(savedAnchors, anim)
+      const b = resolveAnchor(draftAnchors, anim)
+      if (a.anchorBottom !== b.anchorBottom || a.speed !== b.speed) return true
+    }
+    return false
+  }, [savedAnchors, draftAnchors])
+
   // Keep both the React state (for re-rendering previews when sliders move)
   // and the pet-tuning module singleton (which useAnimationLoop reads) in sync.
   // initPetTuning wires the singleton; the setTuning subscription drives renders.
+  //
+  // We per-state merge the broadcast instead of wholesale replacing, so a stale
+  // main that strips unknown AnimParams fields from its echo can't silently
+  // undo a field we just optimistically set (the classic "fresh renderer
+  // talking to old main" debugging pitfall). Without this, adding a new
+  // AnimParams field forces a dev-server restart before it works.
   useEffect(() => {
     const unsub = initPetTuning()
-    window.api.getPetTuning().then(setTuning)
-    const unsub2 = window.api.onPetTuningUpdate(setTuning)
+    const apply = (t: PetTuning): void => {
+      setTuning((prev) => {
+        const animParams = { ...prev.animParams } as PetTuning['animParams']
+        for (const state of ALL_ANIM_STATES) {
+          animParams[state] = { ...prev.animParams[state], ...(t.animParams?.[state] ?? {}) }
+        }
+        return {
+          ...prev,
+          walkSpeed: typeof t.walkSpeed === 'number' ? t.walkSpeed : prev.walkSpeed,
+          gravity: typeof t.gravity === 'number' ? t.gravity : prev.gravity,
+          animOverride: t.animOverride !== undefined ? t.animOverride : prev.animOverride,
+          animParams
+        }
+      })
+    }
+    window.api.getPetTuning().then(apply)
+    const unsub2 = window.api.onPetTuningUpdate(apply)
     return () => {
       unsub()
       unsub2()
     }
   }, [])
 
-  const apply = (patch: Partial<PetTuning>): void => {
-    setTuning((prev) => ({ ...prev, ...patch }))
-    window.api.setPetTuning(patch)
+  const setAnimParam = (state: PetAnimState, patch: Partial<PetTuning['animParams'][PetAnimState]>): void => {
+    setTuning((prev) => ({
+      ...prev,
+      animParams: {
+        ...prev.animParams,
+        [state]: { ...prev.animParams[state], ...patch }
+      }
+    }))
+    window.api.setPetTuning({ animParams: { [state]: patch } } as Partial<PetTuning>)
   }
 
-  const animSpecs: TuningParamSpec[] = [
-    { key: 'animationSpeed', label: t.debugTuningAnimationSpeed, min: 0.1, max: 3.0, step: 0.1 },
-    { key: 'idleRestTicks', label: t.debugTuningIdleRest, min: 1, max: 300, step: 1 },
-    { key: 'idleDipTicks', label: t.debugTuningIdleDip, min: 1, max: 60, step: 1 }
-  ]
+  const setDraftAnchor = (anim: PmdAnimName, patch: Partial<SpriteAnchorEntry>): void => {
+    setDraftAnchors((prev) => {
+      const current = resolveAnchor(prev, anim)
+      return { ...prev, [anim]: { ...current, ...patch } }
+    })
+  }
+
+  const resetCodeDefaults = (): void => {
+    setTuning((prev) => ({ ...prev, animParams: DEFAULT_PET_TUNING.animParams }))
+    window.api.setPetTuning({ animParams: DEFAULT_PET_TUNING.animParams })
+  }
+
+  const revertDraft = (): void => {
+    setDraftAnchors({ ...savedAnchors })
+  }
+
+  const updateXml = async (): Promise<void> => {
+    // Send the full draft so anims the user touched all land in one write.
+    // Main does its own clamp + diff vs disk to avoid no-op writes.
+    await window.api.updateSpriteAnchors(speciesId, draftAnchors)
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
         <span style={{ fontSize: 12, color: '#5d4e37', fontWeight: 600 }}>
           {t.debugAnimSpecies}
         </span>
@@ -568,57 +679,71 @@ function AnimationTab({ lang, t, saveData }: AnimationTabProps): JSX.Element {
             </option>
           ))}
         </select>
+        <button
+          onClick={() => void updateXml()}
+          disabled={!draftDirty}
+          style={{
+            ...btnStyle(draftDirty ? '#27ae60' : '#a8b8a0'),
+            cursor: draftDirty ? 'pointer' : 'default'
+          }}
+          title={t.debugAnimUpdateXmlHint}
+        >
+          {t.debugAnimUpdateXml}
+        </button>
+        <button
+          onClick={revertDraft}
+          disabled={!draftDirty}
+          style={{
+            ...btnStyle(draftDirty ? '#7f8c8d' : '#c4bcae'),
+            cursor: draftDirty ? 'pointer' : 'default'
+          }}
+          title={t.debugAnimRevertDraftHint}
+        >
+          {t.debugAnimRevertDraft}
+        </button>
+        <button
+          onClick={() => copyCodeDefaultsToClipboard(tuning.animParams)}
+          style={btnStyle('#5d7fb3')}
+          title={t.debugAnimCopyCodeDefaultsHint}
+        >
+          {t.debugAnimCopyCodeDefaults}
+        </button>
+        <button
+          onClick={resetCodeDefaults}
+          style={btnStyle('#7f8c8d')}
+        >
+          {t.debugTuningReset}
+        </button>
         <span style={{ fontSize: 11, color: '#7d6b4f', marginLeft: 'auto' }}>
           {t.debugAnimHint}
         </span>
       </div>
 
       <div style={{
-        display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, maxWidth: 640
-      }}>
-        {animSpecs.map((spec) => (
-          <TuningSlider
-            key={spec.key}
-            label={spec.label}
-            value={tuning[spec.key] as number}
-            defaultValue={DEFAULT_PET_TUNING[spec.key] as number}
-            min={spec.min}
-            max={spec.max}
-            step={spec.step}
-            onChange={(v) => apply({ [spec.key]: v } as Partial<PetTuning>)}
-          />
-        ))}
-      </div>
-
-      <button
-        onClick={() =>
-          apply({
-            animationSpeed: DEFAULT_PET_TUNING.animationSpeed,
-            idleRestTicks: DEFAULT_PET_TUNING.idleRestTicks,
-            idleDipTicks: DEFAULT_PET_TUNING.idleDipTicks
-          })
-        }
-        style={{ ...btnStyle('#7f8c8d'), alignSelf: 'flex-start' }}
-      >
-        {t.debugTuningReset}
-      </button>
-
-      <div style={{ height: 1, background: '#d4b896', margin: '4px 0' }} />
-
-      <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
         gap: 12
       }}>
-        {ANIM_STATES.map((state) => (
-          <AnimPreviewCard
-            key={state}
-            speciesId={speciesId}
-            animState={state}
-            idleRest={tuning.idleRestTicks}
-            idleDip={tuning.idleDipTicks}
-          />
-        ))}
+        {ANIM_STATES.map((state) => {
+          const params = tuning.animParams[state]
+          const pmdAnim = SPRITE_KEY_TO_PMD_ANIM[params.spriteKey]
+          const draftEntry = resolveAnchor(draftAnchors, pmdAnim)
+          const savedEntry = resolveAnchor(savedAnchors, pmdAnim)
+          return (
+            <AnimPreviewCard
+              key={state}
+              speciesId={speciesId}
+              animState={state}
+              params={params}
+              draftAnchor={draftEntry}
+              savedAnchor={savedEntry}
+              pmdAnim={pmdAnim}
+              onAnimParamChange={(patch) => setAnimParam(state, patch)}
+              onAnchorChange={(patch) => setDraftAnchor(pmdAnim, patch)}
+              t={t}
+            />
+          )
+        })}
       </div>
     </div>
   )
@@ -627,61 +752,198 @@ function AnimationTab({ lang, t, saveData }: AnimationTabProps): JSX.Element {
 interface AnimPreviewCardProps {
   speciesId: number
   animState: PetAnimState
-  idleRest: number
-  idleDip: number
+  params: PetTuning['animParams'][PetAnimState]
+  /** Currently-being-tuned anchor entry (drives in-card preview alignment). */
+  draftAnchor: SpriteAnchorEntry
+  /** Last-saved-on-disk anchor entry (the value the ↺ buttons revert to). */
+  savedAnchor: SpriteAnchorEntry
+  /** PMD anim name this card writes to in AnimData.xml. */
+  pmdAnim: PmdAnimName
+  /** Patch into PetTuning.animParams (code-side: row + spriteKey). */
+  onAnimParamChange: (patch: Partial<PetTuning['animParams'][PetAnimState]>) => void
+  /** Patch into draft anchors (XML-bound: anchorBottom + native speed). */
+  onAnchorChange: (patch: Partial<SpriteAnchorEntry>) => void
+  t: Locale
 }
 
 function AnimPreviewCard({
-  speciesId, animState, idleRest, idleDip
+  speciesId, animState, params,
+  draftAnchor, savedAnchor, pmdAnim,
+  onAnimParamChange, onAnchorChange, t
 }: AnimPreviewCardProps): JSX.Element {
   const config = useMemo<SpriteSheetConfig | null>(
-    () => getSpriteConfig(speciesId, animState, { rest: idleRest, dip: idleDip }),
-    [speciesId, animState, idleRest, idleDip]
+    () => getSpriteConfig(speciesId, animState, params.row, params.spriteKey),
+    [speciesId, animState, params.row, params.spriteKey]
   )
-  const { frameIndex } = useAnimationLoop(config)
+  // Native speed in the preview = current draft (so the user sees their tune
+  // play out in real time, matching what the in-game pet will do post-write).
+  const { frameIndex } = useAnimationLoop(config, animState, draftAnchor.speed)
+  const availableKeys = useMemo(() => getAvailableSpriteKeys(speciesId), [speciesId])
 
   // Cards have a fixed body so varying sprite sizes line up visually.
-  const CARD_BODY = 96
+  const CARD_BODY = 120
+  const showDirection = MULTI_DIRECTION_ANIMS.has(animState)
+  const anchorDirty =
+    draftAnchor.anchorBottom !== savedAnchor.anchorBottom ||
+    draftAnchor.speed !== savedAnchor.speed
 
   return (
     <div style={{
       background: '#fff',
-      border: '1px solid #ddd',
+      border: `1px solid ${anchorDirty ? '#e0a060' : '#ddd'}`,
       borderRadius: 6,
       padding: 8,
       display: 'flex',
       flexDirection: 'column',
-      alignItems: 'center',
+      alignItems: 'stretch',
       gap: 6
     }}>
       <div style={{
-        fontSize: 11, fontWeight: 600, color: '#5d4e37',
-        alignSelf: 'stretch', textAlign: 'center'
+        fontSize: 11, fontWeight: 600, color: '#5d4e37', textAlign: 'center',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4
       }}>
-        {animState}
+        <span>{animState}</span>
+        <span style={{ fontSize: 9, color: '#a08b6a' }}>· {pmdAnim}</span>
+        {anchorDirty && (
+          <span style={{ fontSize: 9, color: '#c0843a', fontWeight: 700 }}>•</span>
+        )}
       </div>
       <div style={{
-        width: CARD_BODY, height: CARD_BODY,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        position: 'relative',
+        width: '100%', height: CARD_BODY,
+        display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
         background: 'repeating-conic-gradient(#f0e6d5 0% 25%, #e8dcc3 0% 50%) 0 0 / 12px 12px',
-        borderRadius: 4
+        borderRadius: 4,
+        overflow: 'hidden'
       }}>
+        {/* Baseline guideline: where the character's feet should land in-game.
+            Sit it ~12px above the card bottom so the offset preview is visible. */}
+        <div style={{
+          position: 'absolute', left: 0, right: 0, bottom: 12,
+          borderTop: '1px dashed #c0392b', opacity: 0.6, pointerEvents: 'none'
+        }} />
         {config ? (
-          <SpriteCanvas
-            spriteConfig={config}
-            frameIndex={frameIndex}
-            facingLeft={false}
-            scale={2}
-          />
+          <div style={{ marginBottom: 12 - draftAnchor.anchorBottom * 2 }}>
+            <SpriteCanvas
+              spriteConfig={config}
+              frameIndex={frameIndex}
+              facingLeft={false}
+              scale={2}
+            />
+          </div>
         ) : (
           <span style={{ fontSize: 10, color: '#aaa' }}>—</span>
         )}
       </div>
+      <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, color: '#5d4e37' }}>
+        <span style={{ flex: 1, fontWeight: 600 }}>{t.debugAnimSource}</span>
+        <select
+          value={params.spriteKey}
+          onChange={(e) => onAnimParamChange({ spriteKey: e.target.value as PetAnimState })}
+          style={{ ...selectStyle, fontSize: 10, padding: '2px 4px', flex: 2 }}
+          title={SPRITE_KEY_FILENAMES[params.spriteKey]}
+        >
+          {availableKeys.map((k) => (
+            <option key={k} value={k}>
+              {k} · {SPRITE_KEY_FILENAMES[k]}
+            </option>
+          ))}
+        </select>
+      </label>
       {config && (
         <div style={{ fontSize: 9, color: '#a08b6a', lineHeight: 1.3, textAlign: 'center' }}>
           {config.frameCount}f · [{config.durations.join(',')}]
         </div>
       )}
+      <MiniSlider
+        label={t.debugTuningAnimAnchorBottom}
+        value={draftAnchor.anchorBottom}
+        defaultValue={savedAnchor.anchorBottom}
+        min={0}
+        max={48}
+        step={1}
+        onChange={(v) => onAnchorChange({ anchorBottom: v })}
+      />
+      <MiniSlider
+        label={t.debugTuningAnimSpeed}
+        value={draftAnchor.speed}
+        defaultValue={savedAnchor.speed}
+        min={0.1}
+        max={3.0}
+        step={0.1}
+        onChange={(v) => onAnchorChange({ speed: v })}
+      />
+      {showDirection && (
+        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, color: '#5d4e37' }}>
+          <span style={{ flex: 1, fontWeight: 600 }}>{t.debugTuningAnimDirection}</span>
+          <select
+            value={params.row}
+            onChange={(e) => onAnimParamChange({ row: Number(e.target.value) })}
+            style={{ ...selectStyle, fontSize: 10, padding: '2px 4px', flex: 2 }}
+          >
+            {DIRECTION_LABEL_KEYS.map((k, idx) => (
+              <option key={idx} value={idx}>{t[k] as string}</option>
+            ))}
+          </select>
+        </label>
+      )}
+    </div>
+  )
+}
+
+interface MiniSliderProps {
+  label: string
+  value: number
+  defaultValue: number
+  min: number
+  max: number
+  step: number
+  onChange: (v: number) => void
+}
+
+function MiniSlider(p: MiniSliderProps): JSX.Element {
+  const clamp = (n: number): number => Math.max(p.min, Math.min(p.max, n))
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 6,
+        fontSize: 10, color: '#5d4e37'
+      }}>
+        <span style={{ flex: 1, fontWeight: 600 }}>{p.label}</span>
+        <input
+          type="number"
+          min={p.min}
+          max={p.max}
+          step={p.step}
+          value={p.value}
+          onChange={(e) => {
+            const v = Number(e.target.value)
+            if (Number.isFinite(v)) p.onChange(clamp(v))
+          }}
+          style={{ ...selectStyle, width: 56, fontSize: 10, padding: '2px 4px' }}
+        />
+        {p.value !== p.defaultValue && (
+          <button
+            onClick={() => p.onChange(p.defaultValue)}
+            title={`default ${p.defaultValue}`}
+            style={{
+              border: 'none', background: 'transparent', color: '#a08b6a',
+              fontSize: 10, cursor: 'pointer', padding: 0
+            }}
+          >
+            ↺
+          </button>
+        )}
+      </div>
+      <input
+        type="range"
+        min={p.min}
+        max={p.max}
+        step={p.step}
+        value={p.value}
+        onChange={(e) => p.onChange(Number(e.target.value))}
+        style={{ width: '100%' }}
+      />
     </div>
   )
 }

@@ -8,6 +8,8 @@ import { useIdleEvents } from './useIdleEvents'
 import { getSpriteConfig } from '../shared/sprite-config'
 import { useI18n } from '../shared/i18n'
 import { initPetTuning, usePetTuning } from './pet-tuning'
+import { initSpriteAnchorsStore, useSpeciesAnchors } from '../shared/sprite-anchors-store'
+import { resolveAnchor, SPRITE_KEY_TO_PMD_ANIM } from '../../../shared/sprite-anchors'
 
 export default function App(): JSX.Element {
   const [speciesId, setSpeciesId] = useState<number | null>(null)
@@ -24,6 +26,10 @@ export default function App(): JSX.Element {
 
   // Keep live pet-physics tuning in sync with the DevTools panel.
   useEffect(() => initPetTuning(), [])
+
+  // Pull the sprite-anchor cache once and subscribe to live AnimData.xml
+  // updates so anchorBottom changes from the dev panel apply without restart.
+  useEffect(() => initSpriteAnchorsStore(), [])
 
   // Listen for species data pushes from main process
   useEffect(() => {
@@ -84,14 +90,22 @@ export default function App(): JSX.Element {
     : animState
   const displayState = tuning.animOverride ?? physicsState
 
-  // Sprite rendering
+  // Sprite rendering. Pet uses the row + sprite sheet configured in
+  // tuning.animParams so changing facing or swapping the source sheet via the
+  // dev panel takes effect live.
+  const animParam = tuning.animParams[displayState]
   const spriteConfig = speciesId
-    ? getSpriteConfig(speciesId, displayState, {
-        rest: tuning.idleRestTicks,
-        dip: tuning.idleDipTicks
-      })
+    ? getSpriteConfig(speciesId, displayState, animParam?.row, animParam?.spriteKey)
     : null
-  const { frameIndex } = useAnimationLoop(spriteConfig)
+
+  // Re-render whenever this species' anchors change (XML write from dev panel)
+  // so anchor + native-speed below pick up the new values immediately.
+  const speciesAnchors = useSpeciesAnchors(speciesId)
+  const effectiveSpriteKey = animParam?.spriteKey
+    ?? (displayState === 'idle' ? 'happy' : displayState)
+  const anchor = resolveAnchor(speciesAnchors, SPRITE_KEY_TO_PMD_ANIM[effectiveSpriteKey])
+
+  const { frameIndex } = useAnimationLoop(spriteConfig, displayState, anchor.speed)
 
   // Update hit regions for click-through detection
   const updateHitRegions = useCallback(() => {
@@ -109,6 +123,13 @@ export default function App(): JSX.Element {
     return () => clearInterval(id)
   }, [updateHitRegions])
 
+  // Refresh immediately whenever the sprite's bounding box can change — the
+  // dialogue window anchors to this rect, so stale regions would park the
+  // bubble over an old sprite size until the 500ms tick catches up.
+  useEffect(() => {
+    updateHitRegions()
+  }, [displayState, spriteConfig, updateHitRegions])
+
   return (
     <div
       style={{
@@ -119,8 +140,7 @@ export default function App(): JSX.Element {
         alignItems: 'flex-end',
         justifyContent: 'center',
         background: 'transparent',
-        userSelect: 'none',
-        overflow: 'hidden'
+        userSelect: 'none'
       }}
     >
       {showDebug && (
@@ -149,7 +169,17 @@ export default function App(): JSX.Element {
           ].join('\n')}
         </div>
       )}
-      <div ref={containerRef} style={{ cursor: 'grab' }}>
+      <div
+        ref={containerRef}
+        style={{
+          cursor: 'grab',
+          // Push the sprite down by anchorBottom so each animation's "ground
+          // line" (feet) lands at the same window-bottom baseline, regardless
+          // of how much empty space the source frame leaves below the character.
+          // anchorBottom is per-species/per-PMD-anim, sourced from AnimData.xml.
+          marginBottom: -(anchor.anchorBottom * 2)
+        }}
+      >
         {spriteConfig ? (
           <SpriteCanvas
             spriteConfig={spriteConfig}

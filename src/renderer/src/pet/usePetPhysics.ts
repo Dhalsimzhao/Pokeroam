@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import type { PetAnimState } from '../../../shared/types'
+import { PET_WINDOW_SIZE } from '../../../shared/constants'
 import { petTuning } from './pet-tuning'
 
-const WINDOW_SIZE = 128
+const WINDOW_SIZE = PET_WINDOW_SIZE
 // Roam radius from the anchor point, as a fraction of screen width.
 // Total active range = 2 * ROAM_RADIUS_RATIO (= 1/4 of screen width).
 const ROAM_RADIUS_RATIO = 1 / 8

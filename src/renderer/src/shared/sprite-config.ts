@@ -1906,36 +1906,68 @@ export const POKEMON_SPRITES: Record<number, PokemonSpriteSet> = {
   172: PICHU_SPRITES,
 }
 
-// PMD Collab Idle sheets often cycle through 4–8 frames with enough body
-// motion to read as walking-in-place. Collapse idle to a 2-frame breathing
-// loop (long rest on frame 0, brief dip to frame 1) so the pet looks
-// stationary but alive. Cached for stable object identity so
-// useAnimationLoop doesn't re-subscribe every render; cache key includes the
-// tick values so dev-panel sliders take effect immediately.
 type SpriteSheetConfigT = import('../../../shared/types').SpriteSheetConfig
-const idleCache = new Map<string, SpriteSheetConfigT>()
 
+// Stable object identity per (species, spriteKey, row) so useAnimationLoop
+// doesn't re-subscribe every render just because a caller spread a new row.
+const configCache = new Map<string, SpriteSheetConfigT>()
+
+/**
+ * Filename each sprite-set key comes from (same for every species). Used by
+ * the dev panel so we can show "idle ← Hop-Anim.png" and let the user repoint.
+ */
+export const SPRITE_KEY_FILENAMES: Record<PetAnimState, string> = {
+  idle: 'Idle-Anim.png',
+  walk: 'Walk-Anim.png',
+  sleep: 'Sleep-Anim.png',
+  happy: 'Hop-Anim.png',
+  eat: 'Eat-Anim.png',
+  levelup: 'Pose-Anim.png',
+  evolve: 'Charge-Anim.png',
+  dragging: 'Swing-Anim.png',
+  falling: 'Hurt-Anim.png'
+}
+
+/** Sprite keys the given species actually ships (some pokemon skip eat/levelup). */
+export function getAvailableSpriteKeys(speciesId: number): PetAnimState[] {
+  const set = POKEMON_SPRITES[speciesId]
+  if (!set) return []
+  return (Object.keys(set) as PetAnimState[]).filter((k) => set[k] !== undefined)
+}
+
+/**
+ * Resolves the sprite sheet config for a given pokemon + animation.
+ *
+ * `spriteKey` picks which sheet to pull from (defaults to `animState`, with
+ * idle redirected to the Hop sheet at row 0 so the pet faces the player).
+ * `rowOverride` lets dev tooling preview any direction of a multi-direction
+ * sheet without mutating the shared config.
+ */
 export function getSpriteConfig(
   speciesId: number,
   animState: PetAnimState,
-  idleTicks?: { rest: number; dip: number }
+  rowOverride?: number,
+  spriteKey?: PetAnimState
 ): SpriteSheetConfigT | null {
   const spriteSet = POKEMON_SPRITES[speciesId]
   if (!spriteSet) return null
-  const base = spriteSet[animState] ?? spriteSet['idle']
-  if (!base) return null
-  if (animState === 'idle') {
-    const rest = Math.max(1, Math.round(idleTicks?.rest ?? 110))
-    const dip = Math.max(1, Math.round(idleTicks?.dip ?? 8))
-    const key = `${speciesId}:${rest}:${dip}`
-    let cached = idleCache.get(key)
-    if (!cached) {
-      cached = base.frameCount >= 2
-        ? { ...base, frameCount: 2, durations: [rest, dip] }
-        : { ...base, frameCount: 1, durations: [base.durations[0]] }
-      idleCache.set(key, cached)
-    }
-    return cached
+
+  const effectiveKey: PetAnimState =
+    spriteKey ?? (animState === 'idle' ? 'happy' : animState)
+  const source = spriteSet[effectiveKey] ?? spriteSet[animState] ?? spriteSet['idle']
+  if (!source) return null
+
+  const defaultRow =
+    animState === 'idle' && effectiveKey === 'happy' ? 0 : source.row ?? 0
+  const row = rowOverride ?? defaultRow
+
+  if (row === source.row && effectiveKey === animState) return source
+
+  const key = `${speciesId}:${effectiveKey}:${row}`
+  let cached = configCache.get(key)
+  if (!cached) {
+    cached = { ...source, row }
+    configCache.set(key, cached)
   }
-  return base
+  return cached
 }
