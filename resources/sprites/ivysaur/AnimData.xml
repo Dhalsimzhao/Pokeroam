@@ -7,6 +7,8 @@
 			<Index>0</Index>
 			<FrameWidth>32</FrameWidth>
 			<FrameHeight>32</FrameHeight>
+			<AnchorBottom>11</AnchorBottom>
+			<PlaybackSpeed>0.3</PlaybackSpeed>
 			<Durations>
 				<Duration>8</Duration>
 				<Duration>10</Duration>
@@ -79,6 +81,8 @@
 			<Index>5</Index>
 			<FrameWidth>24</FrameWidth>
 			<FrameHeight>32</FrameHeight>
+			<AnchorBottom>9</AnchorBottom>
+			<PlaybackSpeed>1</PlaybackSpeed>
 			<Durations>
 				<Duration>30</Duration>
 				<Duration>35</Duration>
@@ -89,6 +93,8 @@
 			<Index>6</Index>
 			<FrameWidth>48</FrameWidth>
 			<FrameHeight>56</FrameHeight>
+			<AnchorBottom>18</AnchorBottom>
+			<PlaybackSpeed>0.2</PlaybackSpeed>
 			<Durations>
 				<Duration>2</Duration>
 				<Duration>8</Duration>
@@ -113,6 +119,8 @@
 			<FrameHeight>72</FrameHeight>
 			<HitFrame>5</HitFrame>
 			<ReturnFrame>5</ReturnFrame>
+			<AnchorBottom>25</AnchorBottom>
+			<PlaybackSpeed>0.3</PlaybackSpeed>
 			<Durations>
 				<Duration>2</Duration>
 				<Duration>1</Duration>
@@ -155,6 +163,8 @@
 			<FrameWidth>32</FrameWidth>
 			<FrameHeight>80</FrameHeight>
 			<HitFrame>9</HitFrame>
+			<AnchorBottom>35</AnchorBottom>
+			<PlaybackSpeed>0.3</PlaybackSpeed>
 			<Durations>
 				<Duration>2</Duration>
 				<Duration>1</Duration>
@@ -175,6 +185,8 @@
 			<FrameHeight>32</FrameHeight>
 			<HitFrame>5</HitFrame>
 			<ReturnFrame>9</ReturnFrame>
+			<AnchorBottom>12</AnchorBottom>
+			<PlaybackSpeed>0.1</PlaybackSpeed>
 			<Durations>
 				<Duration>2</Duration>
 				<Duration>2</Duration>

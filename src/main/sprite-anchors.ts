@@ -125,9 +125,44 @@ function upsertField(block: string, tag: string, value: number, indent: string):
   return block.replace(/<\/Anim>/, `${insertion}</Anim>`)
 }
 
+/**
+ * Insert a fresh minimal <Anim> block at the end of <Anims>...</Anims>.
+ *
+ * PokéRoam only reads <AnchorBottom> and <PlaybackSpeed> from each block, so
+ * a stub with just <Name> + those two fields is enough to make the anim
+ * tunable. Without this fallback, editing an anchor for a sprite whose block
+ * is absent from AnimData.xml silently no-ops the write: the next reparse
+ * rehydrates without the tuned value and the dev panel's slider "reverts".
+ */
+function insertNewAnimBlock(
+  xml: string,
+  anim: PmdAnimName,
+  patch: Partial<SpriteAnchorEntry>
+): string {
+  const body: string[] = [`\t\t<Anim>`, `\t\t\t<Name>${anim}</Name>`]
+  if (patch.anchorBottom !== undefined) {
+    body.push(`\t\t\t<AnchorBottom>${patch.anchorBottom}</AnchorBottom>`)
+  }
+  if (patch.speed !== undefined) {
+    body.push(`\t\t\t<PlaybackSpeed>${patch.speed}</PlaybackSpeed>`)
+  }
+  body.push(`\t\t</Anim>`)
+  const block = body.join('\n')
+  // Inject right before </Anims>, keeping its leading whitespace intact so
+  // the closing tag stays aligned with the original indentation level.
+  return xml.replace(/([ \t]*)<\/Anims>/, `${block}\n$1</Anims>`)
+}
+
 function writeAnchorsToXml(xml: string, edits: AnimBlockEdit[]): string {
   let out = xml
   for (const { anim, patch } of edits) {
+    // Cheap existence check — anim names are single words so this can't
+    // collide with other fields. Avoids using RegExp.test()'s /g-flag
+    // lastIndex footgun.
+    if (!out.includes(`<Name>${anim}</Name>`)) {
+      out = insertNewAnimBlock(out, anim, patch)
+      continue
+    }
     const re = animBlockRegex(anim)
     out = out.replace(re, (block) => {
       const indent = indentationOf(block)
